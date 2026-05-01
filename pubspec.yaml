@@ -1,0 +1,43 @@
+name: mpesa_tracker
+description: M-Pesa Activity Tracker — GitHub-style heatmap for your money movements.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management
+  provider: ^6.1.2
+
+  # Local database
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+
+  # File & storage
+  path_provider: ^2.1.3
+  file_picker: ^8.1.2
+
+  # Permissions
+  permission_handler: ^11.3.1
+
+  # SMS reading (Android)
+  flutter_sms_inbox: ^1.0.3
+
+  # CSV parsing for statement imports
+  csv: ^6.0.0
+
+  # Date formatting
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
