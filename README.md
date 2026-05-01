@@ -1,17 +1,35 @@
-# mpesa_tracker
+GitHub for your money activity
 
-A new Flutter project.
+A system that automatically parses M-Pesa SMS notifications, extracts transaction details, and
+visualizes daily activity as a GitHub-style heatmap.
+Helping you understand your spending and money movement patterns over time.
 
-## Getting Started
+Instead of manually checking statements, the system:
 
-This project is a starting point for a Flutter application.
+1. Listens to or imports M-Pesa SMS messages
+2. Extracts structured data (date, amount, transaction type)
+3. Aggregates activity per day
+4. Maps intensity of transactions into a heatmap - github style
+5. Displays behavioral patterns visually over time
 
-A few resources to get you started if this is your first Flutter project:
+# Why this?
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```
+ Turns messy SMS data into behavioral insight
+ Makes spending patterns visually obvious
+ Helps with budgeting without traditional finance apps
+ Feels like “GitHub for your money activity”
+```
+# Potential extensions
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+If developed further, it can evolve into:
+
+```
+ Monthly financial “activity score”
+ Full personal finance dashboard
+ Mobile app version with real-time tracking
+```
+It’s a personal financial contribution graph but instead of code commits, it visualizes your
+money activity from M-Pesa as daily behavioral patterns.
+
+NB: It was done as a fun project. 
