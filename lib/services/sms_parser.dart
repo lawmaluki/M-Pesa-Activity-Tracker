@@ -32,8 +32,13 @@ class SmsParser {
   );
 
   // Counterparty name+phone: "JOHN DOE 0722123456" or just name "SAFARICOM POSTPAY"
+  //
+  // Note: "from" is used as a standalone keyword rather than "received from"
+  // / "withdrawn from" because the real M-Pesa wording puts the amount
+  // between the verb and "from", e.g. "...received Ksh100.00 from JOHN DOE
+  // 0722123456 on 1/5/26..." — matching "received from" literally never hits.
   static final _counterpartyPattern = RegExp(
-    r'(?:sent to|received from|withdrawn from|paid to)\s+(.+?)\s+(?:on\s+\d)',
+    r'(?:sent to|paid to|from)\s+(.+?)\s+(?:on\s+\d)',
     caseSensitive: false,
   );
 
