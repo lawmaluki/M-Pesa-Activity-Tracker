@@ -28,11 +28,13 @@ class HeatmapWidget extends StatelessWidget {
     Color(0xFF4CD964), // level 4 — brightest
   ];
 
-  static const _cellSize = 11.0;
-  static const _gap = 2.0;
+  static const _cellSize = 13.0;
+  static const _gap = 3.0;
   static const _unit = _cellSize + _gap;
 
-  static const _dayLabels = ['', 'Tue', '', 'Thu', '', 'Sat', ''];
+  static const _dayLabels = [
+    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +237,7 @@ class _MonthRow extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(left: 22), // align with day grid
+      padding: const EdgeInsets.only(left: 30), // align with day grid
       child: Row(children: labels),
     );
   }
@@ -260,7 +262,7 @@ class _DayLabelColumn extends StatelessWidget {
         child: Center(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 8, color: Colors.white38),
+            style: const TextStyle(fontSize: 9, color: Colors.white38),
           ),
         ),
       )).toList(),

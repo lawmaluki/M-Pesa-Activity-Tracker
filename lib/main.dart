@@ -47,6 +47,15 @@ class MpesaTrackerApp extends StatelessWidget {
             bodyLarge: TextStyle(color: Colors.white),
             bodyMedium: TextStyle(color: Colors.white70),
           ),
+          snackBarTheme: const SnackBarThemeData(
+            backgroundColor: Color(0xFF2C2C2E),
+            contentTextStyle: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
           useMaterial3: true,
         ),
         home: const HomeScreen(),

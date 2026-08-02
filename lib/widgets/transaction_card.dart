@@ -57,7 +57,7 @@ class TransactionCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF2C2C2E),
+          color: const Color(0xFF1C1C1E),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -92,9 +92,10 @@ class TransactionCard extends StatelessWidget {
                   Text(
                     transaction.ref,
                     style: const TextStyle(
-                      color: Colors.white24,
-                      fontSize: 10,
+                      color: Colors.white54,
+                      fontSize: 10.5,
                       fontFamily: 'monospace',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -132,33 +133,65 @@ class _TypeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, bg) = _iconData(type);
+    final (icon, bg, iconColor) = _iconData(type);
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-      child: Icon(icon, color: Colors.white, size: 20),
+      child: Icon(icon, color: iconColor, size: 20),
     );
   }
 
-  static (IconData, Color) _iconData(TransactionType type) {
+  static (IconData, Color, Color) _iconData(TransactionType type) {
     switch (type) {
       case TransactionType.sent:
-        return (Icons.arrow_upward_rounded, const Color(0xFF3A3A3C));
+        return (
+          Icons.arrow_upward_rounded,
+          const Color(0xFF3B1F1C),
+          const Color(0xFFFF6B5E),
+        );
       case TransactionType.received:
-        return (Icons.arrow_downward_rounded, const Color(0xFF1A4D2E));
+        return (
+          Icons.arrow_downward_rounded,
+          const Color(0xFF1C3B28),
+          const Color(0xFF4CD964),
+        );
       case TransactionType.withdrawn:
-        return (Icons.atm_rounded, const Color(0xFF3A2C1A));
+        return (
+          Icons.atm_rounded,
+          const Color(0xFF3A2C1A),
+          Colors.white,
+        );
       case TransactionType.paybill:
-        return (Icons.receipt_long_rounded, const Color(0xFF1A2D4D));
+        return (
+          Icons.receipt_long_rounded,
+          const Color(0xFF1A2D4D),
+          Colors.white,
+        );
       case TransactionType.buyGoods:
-        return (Icons.shopping_bag_rounded, const Color(0xFF2D1A4D));
+        return (
+          Icons.shopping_bag_rounded,
+          const Color(0xFF2D1A4D),
+          Colors.white,
+        );
       case TransactionType.airtime:
-        return (Icons.phone_android_rounded, const Color(0xFF2D2D1A));
+        return (
+          Icons.phone_android_rounded,
+          const Color(0xFF2D2D1A),
+          Colors.white,
+        );
       case TransactionType.reversal:
-        return (Icons.undo_rounded, const Color(0xFF4D1A1A));
+        return (
+          Icons.undo_rounded,
+          const Color(0xFF4D1A1A),
+          Colors.white,
+        );
       case TransactionType.unknown:
-        return (Icons.swap_horiz_rounded, const Color(0xFF3A3A3C));
+        return (
+          Icons.swap_horiz_rounded,
+          const Color(0xFF3A3A3C),
+          Colors.white,
+        );
     }
   }
 }

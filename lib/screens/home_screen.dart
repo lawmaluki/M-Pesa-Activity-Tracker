@@ -53,9 +53,20 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg),
+        content: Text(
+          msg,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
+          ),
+        ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFF3A3A3C), width: 1),
+        ),
       ),
     );
   }
@@ -128,38 +139,64 @@ class _HomeScreenState extends State<HomeScreen> {
     return SliverAppBar(
       backgroundColor: Colors.black,
       pinned: true,
+      toolbarHeight: 64,
       title: Row(
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: const Color(0xFF25A244),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.bar_chart_rounded,
-                color: Colors.white, size: 18),
+                color: Colors.white, size: 24),
           ),
-          const SizedBox(width: 10),
-          const Text(
-            'M-Pesa Tracker',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+          const SizedBox(width: 12),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'M-Pesa Tracker',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'Track. Analyze. Take Control.',
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ],
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.sync_rounded, color: Colors.white70),
+        _CircleIconButton(
+          icon: Icons.sync_rounded,
+          iconColor: const Color(0xFF4CD964),
           tooltip: 'Sync SMS',
           onPressed: provider.state == LoadState.loading ? null : _syncSms,
         ),
+        const SizedBox(width: 8),
         PopupMenuButton<String>(
           color: const Color(0xFF2C2C2E),
-          icon: const Icon(Icons.more_vert_rounded, color: Colors.white70),
+          icon: Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Color(0xFF1C1C1E),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.more_vert_rounded,
+                color: Colors.white70, size: 20),
+          ),
           onSelected: (value) async {
             if (value == 'clear') {
               final confirm = await showDialog<bool>(
@@ -204,6 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+        const SizedBox(width: 12),
       ],
     );
   }
@@ -310,6 +348,44 @@ class _HeatmapSection extends StatelessWidget {
   }
 }
 
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final Color iconColor;
+  final String? tooltip;
+
+  const _CircleIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.iconColor = Colors.white70,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = Material(
+      color: const Color(0xFF1C1C1E),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(
+            icon,
+            size: 20,
+            color: onPressed == null
+                ? iconColor.withValues(alpha: 0.3)
+                : iconColor,
+          ),
+        ),
+      ),
+    );
+    return tooltip != null ? Tooltip(message: tooltip!, child: button) : button;
+  }
+}
+
 class _YearSelector extends StatelessWidget {
   final int year;
   final void Function(int) onChanged;
@@ -321,28 +397,39 @@ class _YearSelector extends StatelessWidget {
     final currentYear = DateTime.now().year;
     return Row(
       children: [
-        IconButton(
-          icon: const Icon(Icons.chevron_left_rounded, color: Colors.white54),
+        _CircleIconButton(
+          icon: Icons.chevron_left_rounded,
           onPressed:
               year > currentYear - 5 ? () => onChanged(year - 1) : null,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
         ),
-        const SizedBox(width: 8),
-        Text(
-          year.toString(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
+        const SizedBox(width: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                year.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white54, size: 20),
+            ],
           ),
         ),
-        const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+        const SizedBox(width: 12),
+        _CircleIconButton(
+          icon: Icons.chevron_right_rounded,
           onPressed: year < currentYear ? () => onChanged(year + 1) : null,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
         ),
       ],
     );
@@ -370,14 +457,17 @@ class _RecentHeader extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        if (selectedDay != null)
-          GestureDetector(
-            onTap: onClear,
-            child: const Text(
-              'Show all',
-              style: TextStyle(color: Color(0xFF4CD964), fontSize: 13),
+        GestureDetector(
+          onTap: onClear,
+          child: const Text(
+            'View all',
+            style: TextStyle(
+              color: Color(0xFF4CD964),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
           ),
+        ),
       ],
     );
   }
