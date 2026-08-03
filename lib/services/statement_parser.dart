@@ -189,8 +189,19 @@ class ParseResult {
   final List<MpesaTransaction> transactions;
   final List<String> errors;
 
-  const ParseResult({required this.transactions, required this.errors});
+  /// Non-fatal advisories — e.g. a PDF import whose reconstructed totals
+  /// don't reconcile against the statement's own SUMMARY block. The import
+  /// still proceeds; this just tells the caller to flag it for review
+  /// instead of reporting a clean success.
+  final List<String> warnings;
+
+  const ParseResult({
+    required this.transactions,
+    required this.errors,
+    this.warnings = const [],
+  });
 
   bool get hasErrors => errors.isNotEmpty;
+  bool get hasWarnings => warnings.isNotEmpty;
   int get count => transactions.length;
 }

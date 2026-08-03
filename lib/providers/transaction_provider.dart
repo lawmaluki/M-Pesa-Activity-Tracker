@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
+import '../services/pdf_statement_parser.dart';
 import '../services/sms_service.dart';
 import '../services/statement_parser.dart';
 
@@ -135,6 +136,45 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
+  Future<ImportResult> importPdf(
+    String filePath,
+    String password, {
+    PdfImportProgress? onProgress,
+  }) async {
+    _setState(LoadState.loading);
+    try {
+      final result = await PdfStatementParser.parsePdf(
+        filePath,
+        password,
+        onProgress: onProgress,
+      );
+      final inserted = await DatabaseService.instance
+          .insertTransactionsBatch(result.transactions);
+      if (inserted > 0) {
+        _transactions = await DatabaseService.instance.fetchAll();
+        await _refreshHeatmapData();
+      }
+      _setState(LoadState.idle);
+      return ImportResult(
+        inserted: inserted,
+        parsed: result.count,
+        errors: result.errors,
+        warnings: result.warnings,
+      );
+    } on PdfImportException catch (e) {
+      _setState(LoadState.idle);
+      return ImportResult(
+        inserted: 0,
+        parsed: 0,
+        errors: [e.message],
+        isPasswordError: e.isPasswordError,
+      );
+    } catch (e) {
+      _setError('PDF import failed: $e');
+      return ImportResult(inserted: 0, parsed: 0, errors: ['Error: $e']);
+    }
+  }
+
   Future<void> deleteTransaction(int id) async {
     await DatabaseService.instance.deleteTransaction(id);
     _transactions.removeWhere((t) => t.id == id);
@@ -199,12 +239,17 @@ class ImportResult {
   final int inserted;
   final int parsed;
   final List<String> errors;
+  final List<String> warnings;
+  final bool isPasswordError;
 
   const ImportResult({
     required this.inserted,
     required this.parsed,
     required this.errors,
+    this.warnings = const [],
+    this.isPasswordError = false,
   });
 
   bool get hasErrors => errors.isNotEmpty;
+  bool get hasWarnings => warnings.isNotEmpty;
 }
