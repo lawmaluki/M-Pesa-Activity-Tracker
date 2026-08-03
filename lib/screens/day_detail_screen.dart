@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../theme/app_colors.dart';
 import '../widgets/transaction_card.dart';
 
 class DayDetailScreen extends StatelessWidget {
@@ -15,11 +16,12 @@ class DayDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        backgroundColor: colors.background,
+        foregroundColor: colors.textPrimary,
         title: Text(
           _dateFmt.format(date),
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -31,10 +33,10 @@ class DayDetailScreen extends StatelessWidget {
           final summary = DaySummary(date: date, transactions: txs);
 
           if (txs.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'No transactions on this day.',
-                style: TextStyle(color: Colors.white38),
+                style: TextStyle(color: colors.textMuted),
               ),
             );
           }
@@ -52,8 +54,8 @@ class DayDetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: Text(
                     '${txs.length} transaction${txs.length == 1 ? '' : 's'}',
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 13),
+                    style: TextStyle(
+                        color: colors.textTertiary, fontSize: 13),
                   ),
                 ),
               ),
@@ -102,11 +104,12 @@ class _DaySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A4D2E), Color(0xFF0F2C1A)],
+        gradient: LinearGradient(
+          colors: [colors.successBg, colors.surface],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -121,13 +124,13 @@ class _DaySummaryCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: colors.textPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   'Intensity ${summary.intensity}/4',
-                  style: const TextStyle(
-                      color: Colors.white70, fontSize: 11),
+                  style: TextStyle(
+                      color: colors.textSecondary, fontSize: 11),
                 ),
               ),
             ],
@@ -138,13 +141,13 @@ class _DaySummaryCard extends StatelessWidget {
               _MiniStat(
                 label: 'Received',
                 value: 'Ksh ${_fmt.format(summary.totalCredited)}',
-                color: const Color(0xFF4CD964),
+                color: colors.accentGreen,
               ),
               const SizedBox(width: 16),
               _MiniStat(
                 label: 'Spent',
                 value: 'Ksh ${_fmt.format(summary.totalDebited)}',
-                color: Colors.white70,
+                color: colors.textSecondary,
               ),
               const SizedBox(width: 16),
               _MiniStat(
@@ -152,8 +155,8 @@ class _DaySummaryCard extends StatelessWidget {
                 value:
                     '${summary.netFlow >= 0 ? '+' : ''}Ksh ${_fmt.format(summary.netFlow.abs())}',
                 color: summary.netFlow >= 0
-                    ? const Color(0xFF4CD964)
-                    : Colors.red.shade300,
+                    ? colors.accentGreen
+                    : colors.dangerText,
               ),
             ],
           ),
@@ -173,12 +176,13 @@ class _MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              style: TextStyle(color: colors.textMuted, fontSize: 11)),
           const SizedBox(height: 4),
           Text(value,
               style: TextStyle(

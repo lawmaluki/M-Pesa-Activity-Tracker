@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../services/sms_service.dart';
+import '../theme/app_colors.dart';
 import '../widgets/heatmap_widget.dart';
 import '../widgets/summary_stats.dart';
 import '../widgets/transaction_card.dart';
@@ -53,19 +55,53 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          msg,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-            fontSize: 13,
-          ),
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF2C2C2E),
+        content: Text(msg),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFF3A3A3C), width: 1),
+          side: BorderSide(color: context.colors.border, width: 1),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAppearanceDialog() async {
+    final themeProvider = context.read<ThemeProvider>();
+    final colors = context.colors;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
+        title: Text('Appearance',
+            style: TextStyle(color: colors.textPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _AppearanceOption(
+              label: 'System default',
+              selected: themeProvider.mode == ThemeMode.system,
+              onTap: () {
+                themeProvider.setMode(ThemeMode.system);
+                Navigator.pop(ctx);
+              },
+            ),
+            _AppearanceOption(
+              label: 'Light',
+              selected: themeProvider.mode == ThemeMode.light,
+              onTap: () {
+                themeProvider.setMode(ThemeMode.light);
+                Navigator.pop(ctx);
+              },
+            ),
+            _AppearanceOption(
+              label: 'Dark',
+              selected: themeProvider.mode == ThemeMode.dark,
+              onTap: () {
+                themeProvider.setMode(ThemeMode.dark);
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -73,8 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Consumer<TransactionProvider>(
           builder: (context, provider, _) {
@@ -82,9 +119,9 @@ class _HomeScreenState extends State<HomeScreen> {
               slivers: [
                 _buildAppBar(provider),
                 if (provider.state == LoadState.loading)
-                  const SliverToBoxAdapter(
+                  SliverToBoxAdapter(
                     child: LinearProgressIndicator(
-                      color: Color(0xFF4CD964),
+                      color: colors.accentGreen,
                       backgroundColor: Colors.transparent,
                     ),
                   ),
@@ -128,16 +165,17 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(builder: (_) => const ImportScreen()),
         ),
-        backgroundColor: const Color(0xFF25A244),
-        icon: const Icon(Icons.upload_file_rounded, color: Colors.white),
+        backgroundColor: colors.brandGreen,
+        icon: const Icon(Icons.upload_file_outlined, color: Colors.white),
         label: const Text('Import', style: TextStyle(color: Colors.white)),
       ),
     );
   }
 
   SliverAppBar _buildAppBar(TransactionProvider provider) {
+    final colors = context.colors;
     return SliverAppBar(
-      backgroundColor: Colors.black,
+      backgroundColor: colors.background,
       pinned: true,
       toolbarHeight: 64,
       title: Row(
@@ -146,30 +184,30 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFF25A244),
+              color: colors.brandGreen,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.bar_chart_rounded,
+            child: const Icon(Icons.bar_chart_outlined,
                 color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'M-Pesa Tracker',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: colors.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 'Track. Analyze. Take Control.',
                 style: TextStyle(
-                  color: Colors.white38,
+                  color: colors.textMuted,
                   fontSize: 12,
                 ),
               ),
@@ -179,34 +217,37 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       actions: [
         _CircleIconButton(
-          icon: Icons.sync_rounded,
-          iconColor: const Color(0xFF4CD964),
+          icon: Icons.sync_outlined,
+          iconColor: colors.accentGreen,
           tooltip: 'Sync SMS',
           onPressed: provider.state == LoadState.loading ? null : _syncSms,
         ),
         const SizedBox(width: 8),
         PopupMenuButton<String>(
-          color: const Color(0xFF2C2C2E),
+          color: colors.surfaceAlt,
           icon: Container(
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1C1C1E),
+            decoration: BoxDecoration(
+              color: colors.surface,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.more_vert_rounded,
-                color: Colors.white70, size: 20),
+            child: Icon(Icons.more_vert_outlined,
+                color: colors.textSecondary, size: 20),
           ),
           onSelected: (value) async {
-            if (value == 'clear') {
+            if (value == 'theme') {
+              await _showAppearanceDialog();
+            } else if (value == 'clear') {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  backgroundColor: const Color(0xFF1C1C1E),
-                  title: const Text('Clear all data?'),
-                  content: const Text(
+                  backgroundColor: colors.surface,
+                  title: Text('Clear all data?',
+                      style: TextStyle(color: colors.textPrimary)),
+                  content: Text(
                     'This will permanently delete all transactions.',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: colors.textSecondary),
                   ),
                   actions: [
                     TextButton(
@@ -215,8 +256,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Delete all',
-                          style: TextStyle(color: Colors.red)),
+                      child: Text('Delete all',
+                          style: TextStyle(color: colors.dangerAccent)),
                     ),
                   ],
                 ),
@@ -227,15 +268,27 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(
+            PopupMenuItem(
+              value: 'theme',
+              child: Row(
+                children: [
+                  Icon(Icons.brightness_6,
+                      color: colors.textSecondary, size: 18),
+                  const SizedBox(width: 8),
+                  Text('Appearance',
+                      style: TextStyle(color: colors.textPrimary)),
+                ],
+              ),
+            ),
+            PopupMenuItem(
               value: 'clear',
               child: Row(
                 children: [
-                  Icon(Icons.delete_forever_rounded,
-                      color: Colors.red, size: 18),
-                  SizedBox(width: 8),
+                  Icon(Icons.delete_forever_outlined,
+                      color: colors.dangerAccent, size: 18),
+                  const SizedBox(width: 8),
                   Text('Clear all data',
-                      style: TextStyle(color: Colors.white)),
+                      style: TextStyle(color: colors.textPrimary)),
                 ],
               ),
             ),
@@ -247,6 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTransactionList(TransactionProvider provider) {
+    final colors = context.colors;
     final txs = provider.selectedDay != null
         ? provider.selectedDayTransactions
         : provider.transactions;
@@ -257,17 +311,17 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.symmetric(vertical: 48),
           child: Column(
             children: [
-              Icon(Icons.inbox_rounded,
-                  size: 56, color: Colors.white.withValues(alpha: 0.1)),
+              Icon(Icons.inbox_outlined,
+                  size: 56, color: colors.textPrimary.withValues(alpha: 0.1)),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'No transactions yet',
-                style: TextStyle(color: Colors.white38, fontSize: 16),
+                style: TextStyle(color: colors.textMuted, fontSize: 16),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Tap Import or sync your SMS to get started.',
-                style: TextStyle(color: Colors.white24, fontSize: 13),
+                style: TextStyle(color: colors.textFaint, fontSize: 13),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -296,6 +350,42 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+class _AppearanceOption extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _AppearanceOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: selected ? colors.accentGreen : colors.textTertiary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Text(label, style: TextStyle(color: colors.textPrimary)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _HeatmapSection extends StatelessWidget {
   final TransactionProvider provider;
 
@@ -303,6 +393,7 @@ class _HeatmapSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return GestureDetector(
       onTap: () {
         if (provider.selectedDay != null) {
@@ -318,10 +409,10 @@ class _HeatmapSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Activity',
             style: TextStyle(
-              color: Colors.white,
+              color: colors.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -351,20 +442,22 @@ class _HeatmapSection extends StatelessWidget {
 class _CircleIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
-  final Color iconColor;
+  final Color? iconColor;
   final String? tooltip;
 
   const _CircleIconButton({
     required this.icon,
     required this.onPressed,
-    this.iconColor = Colors.white70,
+    this.iconColor,
     this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final resolvedColor = iconColor ?? colors.textSecondary;
     final button = Material(
-      color: const Color(0xFF1C1C1E),
+      color: colors.surface,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -376,8 +469,8 @@ class _CircleIconButton extends StatelessWidget {
             icon,
             size: 20,
             color: onPressed == null
-                ? iconColor.withValues(alpha: 0.3)
-                : iconColor,
+                ? resolvedColor.withValues(alpha: 0.3)
+                : resolvedColor,
           ),
         ),
       ),
@@ -394,11 +487,12 @@ class _YearSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final currentYear = DateTime.now().year;
     return Row(
       children: [
         _CircleIconButton(
-          icon: Icons.chevron_left_rounded,
+          icon: Icons.chevron_left_outlined,
           onPressed:
               year > currentYear - 5 ? () => onChanged(year - 1) : null,
         ),
@@ -406,7 +500,7 @@ class _YearSelector extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFF1C1C1E),
+            color: colors.surface,
             borderRadius: BorderRadius.circular(24),
           ),
           child: Row(
@@ -414,21 +508,21 @@ class _YearSelector extends StatelessWidget {
             children: [
               Text(
                 year.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white54, size: 20),
+              Icon(Icons.keyboard_arrow_down_outlined,
+                  color: colors.textTertiary, size: 20),
             ],
           ),
         ),
         const SizedBox(width: 12),
         _CircleIconButton(
-          icon: Icons.chevron_right_rounded,
+          icon: Icons.chevron_right_outlined,
           onPressed: year < currentYear ? () => onChanged(year + 1) : null,
         ),
       ],
@@ -444,6 +538,7 @@ class _RecentHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -451,18 +546,18 @@ class _RecentHeader extends StatelessWidget {
           selectedDay != null
               ? 'Transactions on ${_fmt(selectedDay!)}'
               : 'Recent Transactions',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: colors.textPrimary,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
         GestureDetector(
           onTap: onClear,
-          child: const Text(
+          child: Text(
             'View all',
             style: TextStyle(
-              color: Color(0xFF4CD964),
+              color: colors.accentGreen,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

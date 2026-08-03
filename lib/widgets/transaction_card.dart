@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
+import '../theme/app_colors.dart';
 
 class TransactionCard extends StatelessWidget {
   final MpesaTransaction transaction;
@@ -17,8 +18,9 @@ class TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isCredit = transaction.type.isCredit;
-    final amountColor = isCredit ? const Color(0xFF4CD964) : Colors.white;
+    final amountColor = isCredit ? colors.accentGreen : colors.textPrimary;
 
     return Dismissible(
       key: ValueKey(transaction.id ?? transaction.ref),
@@ -27,17 +29,18 @@ class TransactionCard extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.2),
+          color: colors.dangerAccent.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(Icons.delete_outline, color: Colors.red),
+        child: Icon(Icons.delete_outline, color: colors.dangerAccent),
       ),
       confirmDismiss: (_) async {
         return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF1C1C1E),
-            title: const Text('Delete transaction?'),
+            backgroundColor: colors.surface,
+            title: Text('Delete transaction?',
+                style: TextStyle(color: colors.textPrimary)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -45,8 +48,8 @@ class TransactionCard extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Delete',
-                    style: TextStyle(color: Colors.red)),
+                child: Text('Delete',
+                    style: TextStyle(color: colors.dangerAccent)),
               ),
             ],
           ),
@@ -57,7 +60,7 @@ class TransactionCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -70,8 +73,8 @@ class TransactionCard extends StatelessWidget {
                 children: [
                   Text(
                     transaction.type.label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: colors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
@@ -80,8 +83,8 @@ class TransactionCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       transaction.counterparty!,
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: colors.textTertiary,
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -91,8 +94,8 @@ class TransactionCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     transaction.ref,
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    style: TextStyle(
+                      color: colors.textTertiary,
                       fontSize: 10.5,
                       fontFamily: 'monospace',
                       fontWeight: FontWeight.w500,
@@ -115,7 +118,7 @@ class TransactionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   _timeFmt.format(transaction.date),
-                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                  style: TextStyle(color: colors.textMuted, fontSize: 11),
                 ),
               ],
             ),
@@ -133,7 +136,7 @@ class _TypeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, bg, iconColor) = _iconData(type);
+    final (icon, bg, iconColor) = _iconData(type, context.colors);
     return Container(
       width: 40,
       height: 40,
@@ -142,55 +145,56 @@ class _TypeIcon extends StatelessWidget {
     );
   }
 
-  static (IconData, Color, Color) _iconData(TransactionType type) {
+  static (IconData, Color, Color) _iconData(
+      TransactionType type, AppColors colors) {
     switch (type) {
       case TransactionType.sent:
         return (
-          Icons.arrow_upward_rounded,
-          const Color(0xFF3B1F1C),
-          const Color(0xFFFF6B5E),
+          Icons.arrow_upward_outlined,
+          colors.redTintBg,
+          colors.redTintIcon,
         );
       case TransactionType.received:
         return (
-          Icons.arrow_downward_rounded,
-          const Color(0xFF1C3B28),
-          const Color(0xFF4CD964),
+          Icons.arrow_downward_outlined,
+          colors.greenTintBg,
+          colors.greenTintIcon,
         );
       case TransactionType.withdrawn:
         return (
-          Icons.atm_rounded,
-          const Color(0xFF3A2C1A),
-          Colors.white,
+          Icons.atm_outlined,
+          colors.amberTintBg,
+          colors.amberTintIcon,
         );
       case TransactionType.paybill:
         return (
-          Icons.receipt_long_rounded,
-          const Color(0xFF1A2D4D),
-          Colors.white,
+          Icons.receipt_long_outlined,
+          colors.blueTintBg,
+          colors.blueTintIcon,
         );
       case TransactionType.buyGoods:
         return (
-          Icons.shopping_bag_rounded,
-          const Color(0xFF2D1A4D),
-          Colors.white,
+          Icons.shopping_bag_outlined,
+          colors.purpleTintBg,
+          colors.purpleTintIcon,
         );
       case TransactionType.airtime:
         return (
-          Icons.phone_android_rounded,
-          const Color(0xFF2D2D1A),
-          Colors.white,
+          Icons.phone_android_outlined,
+          colors.yellowTintBg,
+          colors.yellowTintIcon,
         );
       case TransactionType.reversal:
         return (
-          Icons.undo_rounded,
-          const Color(0xFF4D1A1A),
-          Colors.white,
+          Icons.undo_outlined,
+          colors.reversalTintBg,
+          colors.reversalTintIcon,
         );
       case TransactionType.unknown:
         return (
-          Icons.swap_horiz_rounded,
-          const Color(0xFF3A3A3C),
-          Colors.white,
+          Icons.swap_horiz_outlined,
+          colors.neutralTintBg,
+          colors.neutralTintIcon,
         );
     }
   }

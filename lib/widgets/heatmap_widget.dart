@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../theme/app_colors.dart';
+
 /// GitHub-style contribution heatmap for M-Pesa transaction activity.
 ///
 /// Renders a 53-week grid (columns = weeks, rows = Mon–Sun).
@@ -19,15 +21,6 @@ class HeatmapWidget extends StatelessWidget {
     this.onDayTap,
   });
 
-  // Safaricom green palette — 5 levels (0 = empty, 1–4 = intensity)
-  static const _colours = [
-    Color(0xFF1C1C1E), // level 0 — empty (dark surface)
-    Color(0xFF0A3D1F), // level 1 — very light green
-    Color(0xFF1A6B38), // level 2
-    Color(0xFF25A244), // level 3
-    Color(0xFF4CD964), // level 4 — brightest
-  ];
-
   static const _cellSize = 13.0;
   static const _gap = 3.0;
   static const _unit = _cellSize + _gap;
@@ -40,6 +33,7 @@ class HeatmapWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final weeks = _buildWeeks(year);
     final totalWidth = weeks.length * _unit;
+    final colours = context.colors.heatmapLevels;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -60,7 +54,7 @@ class HeatmapWidget extends StatelessWidget {
                   children: weeks.map((week) => _WeekColumn(
                     week: week,
                     dailyCounts: dailyCounts,
-                    colours: _colours,
+                    colours: colours,
                     cellSize: _cellSize,
                     gap: _gap,
                     onDayTap: onDayTap,
@@ -70,7 +64,7 @@ class HeatmapWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _Legend(colours: _colours, cellSize: _cellSize),
+          _Legend(colours: colours, cellSize: _cellSize),
         ],
       ),
     );
@@ -173,15 +167,19 @@ class _DayCell extends StatelessWidget {
       return SizedBox(width: cellSize, height: cellSize + gap);
     }
 
-    final color = colours[_intensity];
+    final colors = context.colors;
+    final isFuture = _isFuture(day!);
     final isToday = _isToday(day!);
+    final color = isFuture ? Colors.transparent : colours[_intensity];
 
     return GestureDetector(
-      onTap: () => onTap?.call(day!, count),
+      onTap: isFuture ? null : () => onTap?.call(day!, count),
       child: Padding(
         padding: EdgeInsets.only(bottom: gap),
         child: Tooltip(
-          message: '${DateFormat('MMM d, yyyy').format(day!)}: $count transaction${count == 1 ? '' : 's'}',
+          message: isFuture
+              ? DateFormat('MMM d, yyyy').format(day!)
+              : '${DateFormat('MMM d, yyyy').format(day!)}: $count transaction${count == 1 ? '' : 's'}',
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             width: cellSize,
@@ -189,9 +187,11 @@ class _DayCell extends StatelessWidget {
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(2),
-              border: isToday
-                  ? Border.all(color: Colors.white54, width: 1)
-                  : null,
+              border: isFuture
+                  ? Border.all(color: colors.heatmapFutureBorder, width: 1)
+                  : (isToday
+                      ? Border.all(color: colors.heatmapTodayBorder, width: 1)
+                      : null),
             ),
           ),
         ),
@@ -203,6 +203,12 @@ class _DayCell extends StatelessWidget {
     final now = DateTime.now();
     return d.year == now.year && d.month == now.month && d.day == now.day;
   }
+
+  static bool _isFuture(DateTime d) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return d.isAfter(today);
+  }
 }
 
 class _MonthRow extends StatelessWidget {
@@ -213,6 +219,8 @@ class _MonthRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labelColor = context.colors.textTertiary;
+
     // Place a month label at the first week that starts in that month
     final labels = <Widget>[];
     int? lastMonth;
@@ -225,9 +233,9 @@ class _MonthRow extends StatelessWidget {
           width: unit,
           child: Text(
             _monthNames[firstDay.month - 1],
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9,
-              color: Colors.white54,
+              color: labelColor,
             ),
           ),
         ));
@@ -256,13 +264,14 @@ class _DayLabelColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labelColor = context.colors.textMuted;
     return Column(
       children: labels.map((label) => SizedBox(
         height: unit,
         child: Center(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 9, color: Colors.white38),
+            style: TextStyle(fontSize: 9, color: labelColor),
           ),
         ),
       )).toList(),
@@ -278,10 +287,11 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labelColor = context.colors.textMuted;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('Less', style: TextStyle(fontSize: 9, color: Colors.white38)),
+        Text('Less', style: TextStyle(fontSize: 9, color: labelColor)),
         const SizedBox(width: 4),
         ...List.generate(5, (i) => Padding(
           padding: const EdgeInsets.only(right: 2),
@@ -295,7 +305,7 @@ class _Legend extends StatelessWidget {
           ),
         )),
         const SizedBox(width: 4),
-        const Text('More', style: TextStyle(fontSize: 9, color: Colors.white38)),
+        Text('More', style: TextStyle(fontSize: 9, color: labelColor)),
       ],
     );
   }

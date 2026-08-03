@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../theme/app_colors.dart';
+
 class SummaryStats extends StatelessWidget {
   final int totalTransactions;
   final double totalSpent;
@@ -17,15 +19,16 @@ class SummaryStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _StatTile(
           label: 'Transactions',
           value: totalTransactions.toString(),
-          icon: Icons.swap_horiz_rounded,
-          iconColor: const Color(0xFF4CD964),
-          iconBg: const Color(0xFF1C3B28),
+          icon: Icons.swap_horiz_outlined,
+          iconColor: colors.greenTintIcon,
+          iconBg: colors.greenTintBg,
           highlighted: true,
           gradientBegin: Alignment.centerRight,
           gradientEnd: Alignment.centerLeft,
@@ -34,17 +37,17 @@ class SummaryStats extends StatelessWidget {
         _StatTile(
           label: 'Spent',
           value: 'Ksh ${_fmt.format(totalSpent)}',
-          icon: Icons.arrow_upward_rounded,
-          iconColor: const Color(0xFFFF6B5E),
-          iconBg: const Color(0xFF3B1F1C),
+          icon: Icons.arrow_upward_outlined,
+          iconColor: colors.redTintIcon,
+          iconBg: colors.redTintBg,
         ),
         const SizedBox(width: 10),
         _StatTile(
           label: 'Received',
           value: 'Ksh ${_fmt.format(totalReceived)}',
-          icon: Icons.arrow_downward_rounded,
-          iconColor: const Color(0xFF4CD964),
-          iconBg: const Color(0xFF1C3B28),
+          icon: Icons.arrow_downward_outlined,
+          iconColor: colors.greenTintIcon,
+          iconBg: colors.greenTintBg,
           highlighted: true,
           gradientBegin: Alignment.centerLeft,
           gradientEnd: Alignment.centerRight,
@@ -79,10 +82,11 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final card = Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(
           highlighted ? _borderRadius - 1 : _borderRadius,
         ),
@@ -102,8 +106,8 @@ class _StatTile extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colors.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
@@ -113,7 +117,7 @@ class _StatTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: TextStyle(color: colors.textTertiary, fontSize: 12),
           ),
         ],
       ),
@@ -134,8 +138,8 @@ class _StatTile extends StatelessWidget {
             begin: gradientBegin,
             end: gradientEnd,
             colors: [
-              const Color(0xFF1C1C1E).withValues(alpha: 0.0),
-              const Color(0xFF4CD964).withValues(alpha: 0.35),
+              colors.surface.withValues(alpha: 0.0),
+              colors.accentGreen.withValues(alpha: 0.35),
             ],
           ),
         ),
