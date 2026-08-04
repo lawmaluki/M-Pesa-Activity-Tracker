@@ -4,6 +4,7 @@ import '../providers/theme_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../services/sms_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/heatmap_customize_sheet.dart';
 import '../widgets/heatmap_widget.dart';
 import '../widgets/summary_stats.dart';
 import '../widgets/transaction_card.dart';
@@ -105,6 +106,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  static String _appearanceLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return 'System';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+    }
   }
 
   @override
@@ -225,6 +237,13 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(width: 8),
         PopupMenuButton<String>(
           color: colors.surfaceAlt,
+          elevation: 8,
+          offset: const Offset(0, 48),
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: colors.border),
+          ),
           icon: Container(
             width: 40,
             height: 40,
@@ -238,6 +257,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onSelected: (value) async {
             if (value == 'theme') {
               await _showAppearanceDialog();
+            } else if (value == 'customize_heatmap') {
+              await HeatmapCustomizeSheet.show(context);
             } else if (value == 'clear') {
               final confirm = await showDialog<bool>(
                 context: context,
@@ -267,32 +288,49 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             }
           },
-          itemBuilder: (_) => [
-            PopupMenuItem(
-              value: 'theme',
-              child: Row(
-                children: [
-                  Icon(Icons.brightness_6,
-                      color: colors.textSecondary, size: 18),
-                  const SizedBox(width: 8),
-                  Text('Appearance',
-                      style: TextStyle(color: colors.textPrimary)),
-                ],
+          itemBuilder: (_) {
+            final mode = context.read<ThemeProvider>().mode;
+            return [
+              PopupMenuItem(
+                value: 'theme',
+                height: 56,
+                child: _MenuTile(
+                  icon: Icons.brightness_6,
+                  iconBg: colors.neutralTintBg,
+                  iconColor: colors.neutralTintIcon,
+                  label: 'Appearance',
+                  trailing: _appearanceLabel(mode),
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'clear',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_forever_outlined,
-                      color: colors.dangerAccent, size: 18),
-                  const SizedBox(width: 8),
-                  Text('Clear all data',
-                      style: TextStyle(color: colors.textPrimary)),
-                ],
+              PopupMenuItem(
+                value: 'customize_heatmap',
+                height: 56,
+                child: _MenuTile(
+                  icon: Icons.palette_outlined,
+                  iconBg: colors.purpleTintBg,
+                  iconColor: colors.purpleTintIcon,
+                  label: 'Customize heatmap',
+                ),
               ),
-            ),
-          ],
+              PopupMenuItem(
+                enabled: false,
+                height: 1,
+                padding: EdgeInsets.zero,
+                child: Divider(height: 1, color: colors.border),
+              ),
+              PopupMenuItem(
+                value: 'clear',
+                height: 56,
+                child: _MenuTile(
+                  icon: Icons.delete_forever_outlined,
+                  iconBg: colors.redTintBg,
+                  iconColor: colors.dangerAccent,
+                  label: 'Clear all data',
+                  labelColor: colors.dangerAccent,
+                ),
+              ),
+            ];
+          },
         ),
         const SizedBox(width: 12),
       ],
@@ -381,6 +419,65 @@ class _AppearanceOption extends StatelessWidget {
             Text(label, style: TextStyle(color: colors.textPrimary)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MenuTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String label;
+  final Color? labelColor;
+  final String? trailing;
+
+  const _MenuTile({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.label,
+    this.labelColor,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, color: iconColor, size: 17),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: labelColor ?? colors.textPrimary,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          if (trailing != null) ...[
+            Text(
+              trailing!,
+              style: TextStyle(color: colors.textMuted, fontSize: 13),
+            ),
+            const SizedBox(width: 2),
+            Icon(Icons.chevron_right_outlined,
+                color: colors.textFaint, size: 16),
+          ],
+        ],
       ),
     );
   }

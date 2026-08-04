@@ -3,8 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../models/transaction.dart';
+import '../providers/heatmap_settings_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/heatmap_theme.dart';
+import '../widgets/heatmap_widget.dart';
 import '../widgets/transaction_card.dart';
 
 class DayDetailScreen extends StatelessWidget {
@@ -105,6 +108,11 @@ class _DaySummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final settings = context.watch<HeatmapSettingsProvider>();
+    final levelColours = resolveHeatmapColours(context, settings.colorTheme);
+    final dotColor = levelColours[summary.intensity.clamp(0, 4)];
+    final isCircleShape = settings.cellShape == HeatmapCellShape.circle;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -121,16 +129,34 @@ class _DaySummaryCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: colors.textPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  'Intensity ${summary.intensity}/4',
-                  style: TextStyle(
-                      color: colors.textSecondary, fontSize: 11),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: dotColor,
+                        shape: isCircleShape
+                            ? BoxShape.circle
+                            : BoxShape.rectangle,
+                        borderRadius:
+                            isCircleShape ? null : BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Intensity ${summary.intensity}/4',
+                      style: TextStyle(
+                          color: colors.textSecondary, fontSize: 11),
+                    ),
+                  ],
                 ),
               ),
             ],

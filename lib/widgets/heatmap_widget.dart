@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/heatmap_settings_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/heatmap_theme.dart';
 
 /// GitHub-style contribution heatmap for M-Pesa transaction activity.
 ///
 /// Renders a 53-week grid (columns = weeks, rows = Mon–Sun).
 /// Each cell is coloured by [intensityFor] — 0 = no activity, 4 = very high.
+/// Color theme, cell size, and cell shape all come from
+/// [HeatmapSettingsProvider] so changes in the customize sheet apply live.
 class HeatmapWidget extends StatelessWidget {
   final int year;
   final Map<String, int> dailyCounts;
@@ -21,10 +26,6 @@ class HeatmapWidget extends StatelessWidget {
     this.onDayTap,
   });
 
-  static const _cellSize = 13.0;
-  static const _gap = 3.0;
-  static const _unit = _cellSize + _gap;
-
   static const _dayLabels = [
     'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
   ];
@@ -32,20 +33,25 @@ class HeatmapWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final weeks = _buildWeeks(year);
-    final totalWidth = weeks.length * _unit;
-    final colours = context.colors.heatmapLevels;
+    final settings = context.watch<HeatmapSettingsProvider>();
+    final cellSize = settings.cellSize.cellSize;
+    final gap = settings.cellSize.gap;
+    final unit = cellSize + gap;
+    final shape = settings.cellShape;
+    final totalWidth = weeks.length * unit;
+    final colours = resolveHeatmapColours(context, settings.colorTheme);
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _MonthRow(weeks: weeks, unit: _unit),
+          _MonthRow(weeks: weeks, unit: unit),
           const SizedBox(height: 4),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _DayLabelColumn(labels: _dayLabels, unit: _unit),
+              _DayLabelColumn(labels: _dayLabels, unit: unit),
               const SizedBox(width: 4),
               SizedBox(
                 width: totalWidth,
@@ -55,8 +61,9 @@ class HeatmapWidget extends StatelessWidget {
                     week: week,
                     dailyCounts: dailyCounts,
                     colours: colours,
-                    cellSize: _cellSize,
-                    gap: _gap,
+                    cellSize: cellSize,
+                    gap: gap,
+                    shape: shape,
                     onDayTap: onDayTap,
                   )).toList(),
                 ),
@@ -64,7 +71,7 @@ class HeatmapWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _Legend(colours: colours, cellSize: _cellSize),
+          _Legend(colours: colours, cellSize: cellSize, shape: shape),
         ],
       ),
     );
@@ -98,12 +105,23 @@ class HeatmapWidget extends StatelessWidget {
   }
 }
 
+/// Level 0 (no activity) stays a neutral surface-matched tone from the app
+/// theme; levels 1–4 come from the user's chosen [HeatmapColorTheme].
+/// Shared by the grid, its legend, and the day-detail intensity dot so they
+/// always agree on color.
+List<Color> resolveHeatmapColours(BuildContext context, HeatmapColorTheme theme) {
+  final emptyColor = context.colors.heatmapLevels[0];
+  final brightness = Theme.of(context).brightness;
+  return [emptyColor, ...theme.ramp(brightness)];
+}
+
 class _WeekColumn extends StatelessWidget {
   final List<DateTime?> week;
   final Map<String, int> dailyCounts;
   final List<Color> colours;
   final double cellSize;
   final double gap;
+  final HeatmapCellShape shape;
   final void Function(DateTime, int)? onDayTap;
 
   const _WeekColumn({
@@ -112,6 +130,7 @@ class _WeekColumn extends StatelessWidget {
     required this.colours,
     required this.cellSize,
     required this.gap,
+    required this.shape,
     required this.onDayTap,
   });
 
@@ -126,6 +145,7 @@ class _WeekColumn extends StatelessWidget {
           colours: colours,
           cellSize: cellSize,
           gap: gap,
+          shape: shape,
           onTap: onDayTap,
         )).toList(),
       ),
@@ -142,6 +162,7 @@ class _DayCell extends StatelessWidget {
   final List<Color> colours;
   final double cellSize;
   final double gap;
+  final HeatmapCellShape shape;
   final void Function(DateTime, int)? onTap;
 
   const _DayCell({
@@ -150,6 +171,7 @@ class _DayCell extends StatelessWidget {
     required this.colours,
     required this.cellSize,
     required this.gap,
+    required this.shape,
     required this.onTap,
   });
 
@@ -171,6 +193,7 @@ class _DayCell extends StatelessWidget {
     final isFuture = _isFuture(day!);
     final isToday = _isToday(day!);
     final color = isFuture ? Colors.transparent : colours[_intensity];
+    final isCircle = shape == HeatmapCellShape.circle;
 
     return GestureDetector(
       onTap: isFuture ? null : () => onTap?.call(day!, count),
@@ -186,7 +209,8 @@ class _DayCell extends StatelessWidget {
             height: cellSize,
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(2),
+              shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
+              borderRadius: isCircle ? null : BorderRadius.circular(2),
               border: isFuture
                   ? Border.all(color: colors.heatmapFutureBorder, width: 1)
                   : (isToday
@@ -282,12 +306,14 @@ class _DayLabelColumn extends StatelessWidget {
 class _Legend extends StatelessWidget {
   final List<Color> colours;
   final double cellSize;
+  final HeatmapCellShape shape;
 
-  const _Legend({required this.colours, required this.cellSize});
+  const _Legend({required this.colours, required this.cellSize, required this.shape});
 
   @override
   Widget build(BuildContext context) {
     final labelColor = context.colors.textMuted;
+    final isCircle = shape == HeatmapCellShape.circle;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -300,7 +326,8 @@ class _Legend extends StatelessWidget {
             height: cellSize,
             decoration: BoxDecoration(
               color: colours[i],
-              borderRadius: BorderRadius.circular(2),
+              shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
+              borderRadius: isCircle ? null : BorderRadius.circular(2),
             ),
           ),
         )),
