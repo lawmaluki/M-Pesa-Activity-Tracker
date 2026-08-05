@@ -38,6 +38,55 @@ class TransactionProvider extends ChangeNotifier {
       .where((t) => t.type.isCredit)
       .fold(0, (sum, t) => sum + t.amount);
 
+  // ── Year-scoped stats (for the share card, which is framed around
+  // whichever year is currently selected on the heatmap) ─────────────────
+
+  List<MpesaTransaction> get _selectedYearTransactions =>
+      _transactions.where((t) => t.date.year == _selectedYear).toList();
+
+  int get yearTransactionCount => _selectedYearTransactions.length;
+
+  double get yearReceived => _selectedYearTransactions
+      .where((t) => t.type.isCredit)
+      .fold(0, (sum, t) => sum + t.amount);
+
+  double get yearSpent => _selectedYearTransactions
+      .where((t) => !t.type.isCredit)
+      .fold(0, (sum, t) => sum + t.amount);
+
+  /// Longest run of consecutive calendar days with at least one
+  /// transaction, within the selected year.
+  int get longestStreakDays {
+    if (_dailyCounts.isEmpty) return 0;
+    final days = _dailyCounts.keys.map(DateTime.parse).toList()..sort();
+    int longest = 1;
+    int current = 1;
+    for (int i = 1; i < days.length; i++) {
+      if (days[i].difference(days[i - 1]).inDays == 1) {
+        current++;
+        if (current > longest) longest = current;
+      } else {
+        current = 1;
+      }
+    }
+    return longest;
+  }
+
+  /// Days elapsed in the selected year — the full year length if it's in
+  /// the past, or "today's day-of-year" if it's the current year.
+  int get daysTrackedInSelectedYear {
+    final now = DateTime.now();
+    final yearStart = DateTime(_selectedYear, 1, 1);
+    if (_selectedYear < now.year) {
+      final yearEnd = DateTime(_selectedYear, 12, 31);
+      return yearEnd.difference(yearStart).inDays + 1;
+    } else if (_selectedYear == now.year) {
+      final today = DateTime(now.year, now.month, now.day);
+      return today.difference(yearStart).inDays + 1;
+    }
+    return 0;
+  }
+
   List<MpesaTransaction> get selectedDayTransactions {
     if (_selectedDay == null) return [];
     final key = _dateKey(_selectedDay!);

@@ -32,7 +32,7 @@ class HeatmapWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final weeks = _buildWeeks(year);
+    final weeks = buildHeatmapWeeks(year);
     final settings = context.watch<HeatmapSettingsProvider>();
     final cellSize = settings.cellSize.cellSize;
     final gap = settings.cellSize.gap;
@@ -77,32 +77,35 @@ class HeatmapWidget extends StatelessWidget {
     );
   }
 
-  /// Builds a list of weeks (each week = list of up to 7 days).
-  /// Week starts on Monday. Pads the first and last week with nulls.
-  static List<List<DateTime?>> _buildWeeks(int year) {
-    final jan1 = DateTime(year, 1, 1);
-    final dec31 = DateTime(year, 12, 31);
+}
 
-    // Pad start so week begins on Monday (weekday 1)
-    final startPadding = (jan1.weekday - 1) % 7;
-    // Pad end so final column is complete
-    final endPadding = (7 - dec31.weekday) % 7;
+/// Builds a list of weeks (each week = list of up to 7 days) for [year].
+/// Week starts on Monday. Pads the first and last week with nulls.
+/// Top-level (rather than a method on [HeatmapWidget]) so the compact
+/// heatmap on the share card can reuse the exact same week grid.
+List<List<DateTime?>> buildHeatmapWeeks(int year) {
+  final jan1 = DateTime(year, 1, 1);
+  final dec31 = DateTime(year, 12, 31);
 
-    final allDays = <DateTime?>[
-      ...List.filled(startPadding, null),
-      ...List.generate(
-        dec31.difference(jan1).inDays + 1,
-        (i) => jan1.add(Duration(days: i)),
-      ),
-      ...List.filled(endPadding, null),
-    ];
+  // Pad start so week begins on Monday (weekday 1)
+  final startPadding = (jan1.weekday - 1) % 7;
+  // Pad end so final column is complete
+  final endPadding = (7 - dec31.weekday) % 7;
 
-    final weeks = <List<DateTime?>>[];
-    for (int i = 0; i < allDays.length; i += 7) {
-      weeks.add(allDays.sublist(i, i + 7));
-    }
-    return weeks;
+  final allDays = <DateTime?>[
+    ...List.filled(startPadding, null),
+    ...List.generate(
+      dec31.difference(jan1).inDays + 1,
+      (i) => jan1.add(Duration(days: i)),
+    ),
+    ...List.filled(endPadding, null),
+  ];
+
+  final weeks = <List<DateTime?>>[];
+  for (int i = 0; i < allDays.length; i += 7) {
+    weeks.add(allDays.sublist(i, i + 7));
   }
+  return weeks;
 }
 
 /// Level 0 (no activity) stays a neutral surface-matched tone from the app

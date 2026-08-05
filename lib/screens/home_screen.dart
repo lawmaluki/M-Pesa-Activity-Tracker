@@ -10,6 +10,7 @@ import '../widgets/summary_stats.dart';
 import '../widgets/transaction_card.dart';
 import 'import_screen.dart';
 import 'day_detail_screen.dart';
+import 'share_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -233,6 +234,12 @@ class _HomeScreenState extends State<HomeScreen> {
           iconColor: colors.accentGreen,
           tooltip: 'Sync SMS',
           onPressed: provider.state == LoadState.loading ? null : _syncSms,
+        ),
+        const SizedBox(width: 8),
+        _CircleIconButton(
+          icon: Icons.share_outlined,
+          tooltip: 'Share',
+          onPressed: () => ShareScreen.show(context),
         ),
         const SizedBox(width: 8),
         PopupMenuButton<String>(
