@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../services/sms_service.dart';
 import '../theme/app_colors.dart';
-import '../widgets/heatmap_customize_sheet.dart';
 import '../widgets/heatmap_widget.dart';
+import '../widgets/more_menu_sheet.dart';
 import '../widgets/summary_stats.dart';
 import '../widgets/transaction_card.dart';
 import 'import_screen.dart';
@@ -64,60 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _showAppearanceDialog() async {
-    final themeProvider = context.read<ThemeProvider>();
-    final colors = context.colors;
-
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.surface,
-        title: Text('Appearance',
-            style: TextStyle(color: colors.textPrimary)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _AppearanceOption(
-              label: 'System default',
-              selected: themeProvider.mode == ThemeMode.system,
-              onTap: () {
-                themeProvider.setMode(ThemeMode.system);
-                Navigator.pop(ctx);
-              },
-            ),
-            _AppearanceOption(
-              label: 'Light',
-              selected: themeProvider.mode == ThemeMode.light,
-              onTap: () {
-                themeProvider.setMode(ThemeMode.light);
-                Navigator.pop(ctx);
-              },
-            ),
-            _AppearanceOption(
-              label: 'Dark',
-              selected: themeProvider.mode == ThemeMode.dark,
-              onTap: () {
-                themeProvider.setMode(ThemeMode.dark);
-                Navigator.pop(ctx);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static String _appearanceLabel(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.system:
-        return 'System';
-      case ThemeMode.light:
-        return 'Light';
-      case ThemeMode.dark:
-        return 'Dark';
-    }
   }
 
   @override
@@ -189,6 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final colors = context.colors;
     return SliverAppBar(
       backgroundColor: colors.background,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+      elevation: 0,
       pinned: true,
       toolbarHeight: 64,
       title: Row(
@@ -242,102 +190,10 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () => ShareScreen.show(context),
         ),
         const SizedBox(width: 8),
-        PopupMenuButton<String>(
-          color: colors.surfaceAlt,
-          elevation: 8,
-          offset: const Offset(0, 48),
-          padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: colors.border),
-          ),
-          icon: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.more_vert_outlined,
-                color: colors.textSecondary, size: 20),
-          ),
-          onSelected: (value) async {
-            if (value == 'theme') {
-              await _showAppearanceDialog();
-            } else if (value == 'customize_heatmap') {
-              await HeatmapCustomizeSheet.show(context);
-            } else if (value == 'clear') {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  backgroundColor: colors.surface,
-                  title: Text('Clear all data?',
-                      style: TextStyle(color: colors.textPrimary)),
-                  content: Text(
-                    'This will permanently delete all transactions.',
-                    style: TextStyle(color: colors.textSecondary),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: Text('Delete all',
-                          style: TextStyle(color: colors.dangerAccent)),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true && mounted) {
-                await context.read<TransactionProvider>().clearAll();
-              }
-            }
-          },
-          itemBuilder: (_) {
-            final mode = context.read<ThemeProvider>().mode;
-            return [
-              PopupMenuItem(
-                value: 'theme',
-                height: 56,
-                child: _MenuTile(
-                  icon: Icons.brightness_6,
-                  iconBg: colors.neutralTintBg,
-                  iconColor: colors.neutralTintIcon,
-                  label: 'Appearance',
-                  trailing: _appearanceLabel(mode),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'customize_heatmap',
-                height: 56,
-                child: _MenuTile(
-                  icon: Icons.palette_outlined,
-                  iconBg: colors.purpleTintBg,
-                  iconColor: colors.purpleTintIcon,
-                  label: 'Customize heatmap',
-                ),
-              ),
-              PopupMenuItem(
-                enabled: false,
-                height: 1,
-                padding: EdgeInsets.zero,
-                child: Divider(height: 1, color: colors.border),
-              ),
-              PopupMenuItem(
-                value: 'clear',
-                height: 56,
-                child: _MenuTile(
-                  icon: Icons.delete_forever_outlined,
-                  iconBg: colors.redTintBg,
-                  iconColor: colors.dangerAccent,
-                  label: 'Clear all data',
-                  labelColor: colors.dangerAccent,
-                ),
-              ),
-            ];
-          },
+        _CircleIconButton(
+          icon: Icons.more_vert_outlined,
+          tooltip: 'Menu',
+          onPressed: () => MoreMenuSheet.show(context),
         ),
         const SizedBox(width: 12),
       ],
@@ -390,101 +246,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         childCount: txs.length,
-      ),
-    );
-  }
-}
-
-class _AppearanceOption extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _AppearanceOption({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          children: [
-            Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              color: selected ? colors.accentGreen : colors.textTertiary,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Text(label, style: TextStyle(color: colors.textPrimary)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconBg;
-  final Color iconColor;
-  final String label;
-  final Color? labelColor;
-  final String? trailing;
-
-  const _MenuTile({
-    required this.icon,
-    required this.iconBg,
-    required this.iconColor,
-    required this.label,
-    this.labelColor,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: Icon(icon, color: iconColor, size: 17),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: labelColor ?? colors.textPrimary,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          if (trailing != null) ...[
-            Text(
-              trailing!,
-              style: TextStyle(color: colors.textMuted, fontSize: 13),
-            ),
-            const SizedBox(width: 2),
-            Icon(Icons.chevron_right_outlined,
-                color: colors.textFaint, size: 16),
-          ],
-        ],
       ),
     );
   }

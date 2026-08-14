@@ -60,11 +60,11 @@ class HeatmapCustomizeSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            _SectionLabel('Color theme'),
+            _SectionLabel('Color'),
             const SizedBox(height: 12),
             Wrap(
-              spacing: 16,
-              runSpacing: 12,
+              spacing: 14,
+              runSpacing: 14,
               children: HeatmapColorTheme.values.map((theme) {
                 final selected = settings.colorTheme == theme;
                 final swatchColor = theme.swatch(brightness);
@@ -73,34 +73,40 @@ class HeatmapCustomizeSheet extends StatelessWidget {
                             Brightness.dark
                         ? Colors.white
                         : Colors.black;
-                return GestureDetector(
-                  onTap: () => context
-                      .read<HeatmapSettingsProvider>()
-                      .setColorTheme(theme),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: swatchColor,
-                          shape: BoxShape.circle,
-                          border: selected
-                              ? Border.all(color: colors.textPrimary, width: 2)
-                              : null,
-                        ),
-                        child: selected
-                            ? Icon(Icons.check, color: onSwatch, size: 18)
+                return Tooltip(
+                  message: theme.label,
+                  child: GestureDetector(
+                    onTap: () => context
+                        .read<HeatmapSettingsProvider>()
+                        .setColorTheme(theme),
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: selected
+                            ? Border.all(color: colors.textPrimary, width: 2)
                             : null,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        theme.label,
-                        style:
-                            TextStyle(color: colors.textTertiary, fontSize: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color.lerp(swatchColor, Colors.white, 0.30)!,
+                              swatchColor,
+                              Color.lerp(swatchColor, Colors.black, 0.18)!,
+                            ],
+                          ),
+                        ),
+                        child: selected
+                            ? Icon(Icons.check, color: onSwatch, size: 16)
+                            : null,
                       ),
-                    ],
+                    ),
                   ),
                 );
               }).toList(),

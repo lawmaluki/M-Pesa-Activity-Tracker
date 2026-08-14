@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/money.dart';
 
 class SummaryStats extends StatelessWidget {
   final int totalTransactions;
@@ -14,8 +14,6 @@ class SummaryStats extends StatelessWidget {
     required this.totalSpent,
     required this.totalReceived,
   });
-
-  static final _fmt = NumberFormat('#,##0');
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +34,7 @@ class SummaryStats extends StatelessWidget {
         const SizedBox(width: 10),
         _StatTile(
           label: 'Spent',
-          value: 'Ksh ${_fmt.format(totalSpent)}',
+          value: Money.whole(totalSpent),
           icon: Icons.arrow_upward_outlined,
           iconColor: colors.redTintIcon,
           iconBg: colors.redTintBg,
@@ -44,7 +42,7 @@ class SummaryStats extends StatelessWidget {
         const SizedBox(width: 10),
         _StatTile(
           label: 'Received',
-          value: 'Ksh ${_fmt.format(totalReceived)}',
+          value: Money.whole(totalReceived),
           icon: Icons.arrow_downward_outlined,
           iconColor: colors.greenTintIcon,
           iconBg: colors.greenTintBg,

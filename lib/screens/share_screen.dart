@@ -109,66 +109,89 @@ class _ShareScreenState extends State<ShareScreen> {
       type: MaterialType.transparency,
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _CloseButton(
-                  colors: colors,
-                  onTap: () => Navigator.pop(context),
-                ),
-                const SizedBox(height: 10),
-                Screenshot(
-                  controller: _controller,
-                  child: ShareCard(
-                    year: provider.selectedYear,
-                    daysTracked: provider.daysTrackedInSelectedYear,
-                    dailyCounts: provider.dailyCounts,
-                    transactionCount: provider.yearTransactionCount,
-                    longestStreak: provider.longestStreakDays,
-                    received: provider.yearReceived,
-                    sent: provider.yearSpent,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Align(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _PillButton(
-                        icon: Icons.download_outlined,
-                        label: 'Save',
-                        background: colors.surface,
-                        foreground: colors.textPrimary,
-                        border: colors.border,
-                        onPressed: _busy ? null : _save,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Size the card to the space actually available (capped so it
+              // doesn't balloon on tablets) instead of a fixed width that
+              // overflows narrow phones or leaves lopsided margins on wide
+              // ones — this is also what gives the heatmap room to render
+              // its cells at a legible size.
+              final cardWidth = constraints.maxWidth.clamp(260.0, 420.0);
+
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(
+                    child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: cardWidth,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: _CloseButton(
+                          colors: colors,
+                          onTap: () => Navigator.pop(context),
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      _PillButton(
-                        icon: Icons.share_outlined,
-                        label: 'Share',
-                        background: colors.brandGreen,
-                        foreground: Colors.white,
-                        onPressed: _busy ? null : _share,
+                    ),
+                    const SizedBox(height: 10),
+                    Screenshot(
+                      controller: _controller,
+                      child: ShareCard(
+                        width: cardWidth,
+                        year: provider.selectedYear,
+                        daysTracked: provider.daysTrackedInSelectedYear,
+                        dailyCounts: provider.dailyCounts,
+                        transactionCount: provider.yearTransactionCount,
+                        longestStreak: provider.longestStreakDays,
+                        received: provider.yearReceived,
+                        sent: provider.yearSpent,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    Align(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _PillButton(
+                            icon: Icons.download_outlined,
+                            label: 'Save',
+                            background: colors.surface,
+                            foreground: colors.textPrimary,
+                            border: colors.border,
+                            onPressed: _busy ? null : _save,
+                          ),
+                          const SizedBox(width: 12),
+                          _PillButton(
+                            icon: Icons.share_outlined,
+                            label: 'Share',
+                            background: colors.brandGreen,
+                            foreground: Colors.white,
+                            onPressed: _busy ? null : _share,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_busy) ...[
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ],
-                  ),
-                ),
-                if (_busy) ...[
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: colors.textSecondary,
+                  ],
                     ),
                   ),
-                ],
-              ],
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),

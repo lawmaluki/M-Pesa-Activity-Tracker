@@ -10,7 +10,6 @@ enum LoadState { idle, loading, error }
 class TransactionProvider extends ChangeNotifier {
   List<MpesaTransaction> _transactions = [];
   Map<String, int> _dailyCounts = {};
-  Map<String, double> _dailyAmounts = {};
   LoadState _state = LoadState.idle;
   String? _errorMessage;
   int _selectedYear;
@@ -22,7 +21,6 @@ class TransactionProvider extends ChangeNotifier {
 
   List<MpesaTransaction> get transactions => _transactions;
   Map<String, int> get dailyCounts => _dailyCounts;
-  Map<String, double> get dailyAmounts => _dailyAmounts;
   LoadState get state => _state;
   String? get errorMessage => _errorMessage;
   int get selectedYear => _selectedYear;
@@ -105,7 +103,6 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   int countForDay(String dateKey) => _dailyCounts[dateKey] ?? 0;
-  double amountForDay(String dateKey) => _dailyAmounts[dateKey] ?? 0;
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -235,7 +232,6 @@ class TransactionProvider extends ChangeNotifier {
     await DatabaseService.instance.deleteAll();
     _transactions = [];
     _dailyCounts = {};
-    _dailyAmounts = {};
     _selectedDay = null;
     notifyListeners();
   }
@@ -255,7 +251,6 @@ class TransactionProvider extends ChangeNotifier {
     _transactions.insert(0, tx);
     final key = tx.dateKey;
     _dailyCounts[key] = (_dailyCounts[key] ?? 0) + 1;
-    _dailyAmounts[key] = (_dailyAmounts[key] ?? 0) + tx.amount;
     notifyListeners();
   }
 
@@ -264,8 +259,6 @@ class TransactionProvider extends ChangeNotifier {
   Future<void> _refreshHeatmapData() async {
     _dailyCounts =
         await DatabaseService.instance.fetchDailyCountsForYear(_selectedYear);
-    _dailyAmounts =
-        await DatabaseService.instance.fetchDailyAmountsForYear(_selectedYear);
   }
 
   void _setState(LoadState s) {

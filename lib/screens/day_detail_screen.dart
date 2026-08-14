@@ -6,6 +6,7 @@ import '../models/transaction.dart';
 import '../providers/heatmap_settings_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../theme/app_colors.dart';
+import '../utils/money.dart';
 import '../theme/heatmap_theme.dart';
 import '../widgets/heatmap_widget.dart';
 import '../widgets/transaction_card.dart';
@@ -103,8 +104,6 @@ class _DaySummaryCard extends StatelessWidget {
 
   const _DaySummaryCard({required this.summary});
 
-  static final _fmt = NumberFormat('#,##0.00');
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -166,20 +165,20 @@ class _DaySummaryCard extends StatelessWidget {
             children: [
               _MiniStat(
                 label: 'Received',
-                value: 'Ksh ${_fmt.format(summary.totalCredited)}',
+                value: Money.exact(summary.totalCredited),
                 color: colors.accentGreen,
               ),
               const SizedBox(width: 16),
               _MiniStat(
                 label: 'Spent',
-                value: 'Ksh ${_fmt.format(summary.totalDebited)}',
+                value: Money.exact(summary.totalDebited),
                 color: colors.textSecondary,
               ),
               const SizedBox(width: 16),
               _MiniStat(
                 label: 'Net',
                 value:
-                    '${summary.netFlow >= 0 ? '+' : ''}Ksh ${_fmt.format(summary.netFlow.abs())}',
+                    '${summary.netFlow >= 0 ? '+' : '-'}${Money.exact(summary.netFlow.abs())}',
                 color: summary.netFlow >= 0
                     ? colors.accentGreen
                     : colors.dangerText,

@@ -24,7 +24,13 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
+        // Material 3 otherwise tints the app bar with a translucent overlay
+        // of colorScheme.surfaceTint once it's "scrolled under" (which a
+        // pinned SliverAppBar counts as) — that's what made the header look
+        // a shade different from the rest of the screen. Pin it flat.
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         titleTextStyle: TextStyle(
           color: colors.textPrimary,
           fontWeight: FontWeight.bold,

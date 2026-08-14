@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/heatmap_settings_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/heatmap_theme.dart';
+import '../utils/money.dart';
 import 'heatmap_widget.dart' show resolveHeatmapColours, buildHeatmapWeeks;
 
 /// The shareable/saveable "year in review" card — title, days-tracked
 /// pill, a compact heatmap, and a tilted 2x2 stat grid.
 ///
-/// Fixed width so the exported image looks the same everywhere it's
-/// captured; on narrow screens [ShareScreen] scales the *preview* down
-/// with a FittedBox, which doesn't affect the resolution of the actual
-/// captured PNG (the RepaintBoundary captures this widget's native size).
+/// [width] is computed by [ShareScreen] from the available screen space
+/// (rather than hardcoded) so the card sits edge-to-edge with sensible
+/// margins on any device instead of overflowing narrow ones or leaving
+/// odd gaps on wide ones — and so the heatmap grid below always has the
+/// most room possible to render its cells at a legible size.
 class ShareCard extends StatelessWidget {
-  static const double width = 360;
-
+  final double width;
   final int year;
   final int daysTracked;
   final Map<String, int> dailyCounts;
@@ -27,6 +27,7 @@ class ShareCard extends StatelessWidget {
 
   const ShareCard({
     super.key,
+    required this.width,
     required this.year,
     required this.daysTracked,
     required this.dailyCounts,
@@ -36,8 +37,6 @@ class ShareCard extends StatelessWidget {
     required this.sent,
   });
 
-  static final _amountFmt = NumberFormat.compact();
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -46,11 +45,18 @@ class ShareCard extends StatelessWidget {
 
     return Container(
       width: width,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.background,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,18 +86,18 @@ class ShareCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 18),
 
           // ── Title ───────────────────────────────────────────────────
           Text.rich(
             TextSpan(
               children: [
                 TextSpan(
-                  text: 'Money\n',
+                  text: 'Money ',
                   style: TextStyle(
                     color: colors.textPrimary,
                     fontWeight: FontWeight.w900,
-                    fontSize: 36,
+                    fontSize: 26,
                     height: 1.05,
                   ),
                 ),
@@ -100,15 +106,15 @@ class ShareCard extends StatelessWidget {
                   style: TextStyle(
                     color: colors.accentGreen,
                     fontWeight: FontWeight.w900,
-                    fontSize: 36,
+                    fontSize: 26,
                     height: 1.05,
                   ),
                 ),
-                const TextSpan(text: '✨', style: TextStyle(fontSize: 28)),
+                const TextSpan(text: '✨', style: TextStyle(fontSize: 22)),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // ── Duration pill ───────────────────────────────────────────
           Container(
@@ -135,25 +141,26 @@ class ShareCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 16),
 
-          // ── Heatmap ─────────────────────────────────────────────────
+          // ── Heatmap — the whole point of the share, give it the room ──
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: colors.border),
+              border: Border.all(color: colors.accentGreen.withValues(alpha: 0.35)),
             ),
             child: _MiniHeatmap(
               year: year,
               dailyCounts: dailyCounts,
               colours: colours,
+              emptyColor: colors.border,
               shape: settings.cellShape,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
           // ── Stat grid ───────────────────────────────────────────────
           Row(
@@ -189,7 +196,7 @@ class ShareCard extends StatelessWidget {
                   icon: Icons.arrow_downward_outlined,
                   bg: colors.greenTintBg,
                   iconColor: colors.greenTintIcon,
-                  value: 'Ksh ${_amountFmt.format(received)}',
+                  value: Money.compact(received),
                   label: 'RECEIVED',
                   angle: 0.035,
                 ),
@@ -200,7 +207,7 @@ class ShareCard extends StatelessWidget {
                   icon: Icons.arrow_upward_outlined,
                   bg: colors.purpleTintBg,
                   iconColor: colors.purpleTintIcon,
-                  value: 'Ksh ${_amountFmt.format(sent)}',
+                  value: Money.compact(sent),
                   label: 'SENT',
                   angle: -0.035,
                 ),
@@ -289,29 +296,38 @@ class _TiltedStat extends StatelessWidget {
   }
 }
 
-/// A small, static (non-interactive) render of the activity heatmap —
-/// same week grid, color theme, and cell shape as the main screen's
+/// A small, static (non-interactive) render of the activity heatmap — same
+/// week grid, color theme, and cell shape as the main screen's
 /// [HeatmapWidget] (via [resolveHeatmapColours]/[buildHeatmapWeeks]/
-/// [HeatmapCellShape]), just sized to fit inside the fixed-width card.
+/// [HeatmapCellShape]).
+///
+/// Cell size isn't a fixed constant — it's derived from whatever width
+/// [LayoutBuilder] reports for its housing container, so the grid always
+/// fills the space it's given edge-to-edge and cells are as large (and
+/// legible) as the container allows, rather than a cramped fixed size.
 class _MiniHeatmap extends StatelessWidget {
   final int year;
   final Map<String, int> dailyCounts;
   final List<Color> colours;
+  final Color emptyColor;
   final HeatmapCellShape shape;
 
   const _MiniHeatmap({
     required this.year,
     required this.dailyCounts,
     required this.colours,
+    required this.emptyColor,
     required this.shape,
   });
 
-  static const _cellSize = 4.0;
-  static const _gap = 1.0;
+  static const _gap = 0.8;
+  static const _dayLabelWidth = 8.0;
   static const _dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  // First-letter-only month labels — plenty to place the grid in time at
+  // this scale, and they don't overflow the narrow per-week columns the
+  // way "Jan"/"Feb" full names did.
   static const _monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D',
   ];
 
   static int _intensity(int count) {
@@ -329,108 +345,124 @@ class _MiniHeatmap extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final weeks = buildHeatmapWeeks(year);
-    final unit = _cellSize + _gap;
     final isCircle = shape == HeatmapCellShape.circle;
 
-    final monthLabels = <Widget>[];
-    int? lastMonth;
-    for (final week in weeks) {
-      final firstDay = week.firstWhere((d) => d != null, orElse: () => null);
-      if (firstDay != null && firstDay.month != lastMonth) {
-        lastMonth = firstDay.month;
-        monthLabels.add(SizedBox(
-          width: unit,
-          child: Text(
-            _monthNames[firstDay.month - 1],
-            style: TextStyle(fontSize: 6.5, color: colors.textFaint),
-          ),
-        ));
-      } else {
-        monthLabels.add(SizedBox(width: unit));
-      }
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gridWidth = constraints.maxWidth - _dayLabelWidth;
+        final unit = gridWidth / weeks.length;
+        final cellSize = (unit - _gap).clamp(4.0, 14.0);
+        final cellRadius = (cellSize * 0.3).clamp(0.6, 3.0);
+        final labelFontSize = (cellSize * 1.4).clamp(7.5, 11.0);
 
-    Widget cell(DateTime? day) {
-      final count = day != null ? (dailyCounts[_key(day)] ?? 0) : 0;
-      final color =
-          day == null ? Colors.transparent : colours[_intensity(count)];
-      return Padding(
-        padding: const EdgeInsets.only(bottom: _gap),
-        child: Container(
-          width: _cellSize,
-          height: _cellSize,
-          decoration: BoxDecoration(
-            color: color,
-            shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
-            borderRadius: isCircle ? null : BorderRadius.circular(1),
-          ),
-        ),
-      );
-    }
+        final monthLabels = <Widget>[];
+        int? lastMonth;
+        for (final week in weeks) {
+          final firstDay =
+              week.firstWhere((d) => d != null, orElse: () => null);
+          if (firstDay != null && firstDay.month != lastMonth) {
+            lastMonth = firstDay.month;
+            monthLabels.add(SizedBox(
+              width: unit,
+              child: Text(
+                _monthNames[firstDay.month - 1],
+                style: TextStyle(fontSize: labelFontSize, color: colors.textFaint),
+              ),
+            ));
+          } else {
+            monthLabels.add(SizedBox(width: unit));
+          }
+        }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 13),
-          child: Row(children: monthLabels),
-        ),
-        const SizedBox(height: 3),
-        Row(
+        Widget cell(DateTime? day) {
+          final count = day != null ? (dailyCounts[_key(day)] ?? 0) : 0;
+          final level = day == null ? -1 : _intensity(count);
+          final color = level < 0
+              ? Colors.transparent
+              : (level == 0 ? emptyColor : colours[level]);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: _gap),
+            child: Container(
+              width: cellSize,
+              height: cellSize,
+              decoration: BoxDecoration(
+                color: color,
+                shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
+                borderRadius: isCircle ? null : BorderRadius.circular(cellRadius),
+              ),
+            ),
+          );
+        }
+
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Column(
-              children: _dayLabels
-                  .map((l) => SizedBox(
-                        width: 10,
-                        height: unit,
-                        child: Center(
-                          child: Text(
-                            l,
-                            style: TextStyle(
-                                fontSize: 6.5, color: colors.textFaint),
-                          ),
-                        ),
-                      ))
-                  .toList(),
+            Padding(
+              padding: const EdgeInsets.only(left: _dayLabelWidth),
+              child: Row(children: monthLabels),
             ),
-            const SizedBox(width: 3),
-            ...weeks.map((week) => Padding(
-                  padding: const EdgeInsets.only(right: _gap),
-                  child: Column(children: week.map(cell).toList()),
-                )),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Less',
-                style: TextStyle(fontSize: 7, color: colors.textFaint)),
-            const SizedBox(width: 4),
-            ...List.generate(
-              5,
-              (i) => Padding(
-                padding: const EdgeInsets.only(right: 2),
-                child: Container(
-                  width: _cellSize,
-                  height: _cellSize,
-                  decoration: BoxDecoration(
-                    color: colours[i],
-                    shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
-                    borderRadius: isCircle ? null : BorderRadius.circular(1),
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: _dayLabelWidth,
+                  child: Column(
+                    children: _dayLabels
+                        .map((l) => SizedBox(
+                              height: unit,
+                              child: Center(
+                                child: Text(
+                                  l,
+                                  style: TextStyle(
+                                      fontSize: labelFontSize,
+                                      color: colors.textFaint),
+                                ),
+                              ),
+                            ))
+                        .toList(),
                   ),
                 ),
-              ),
+                ...weeks.map((week) => Padding(
+                      padding: const EdgeInsets.only(right: _gap),
+                      child: Column(children: week.map(cell).toList()),
+                    )),
+              ],
             ),
-            const SizedBox(width: 2),
-            Text('More',
-                style: TextStyle(fontSize: 7, color: colors.textFaint)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Text('Less',
+                    style:
+                        TextStyle(fontSize: labelFontSize, color: colors.textFaint)),
+                const SizedBox(width: 5),
+                ...List.generate(
+                  5,
+                  (i) => Padding(
+                    padding: const EdgeInsets.only(right: 2.5),
+                    child: Container(
+                      width: cellSize,
+                      height: cellSize,
+                      decoration: BoxDecoration(
+                        color: i == 0 ? emptyColor : colours[i],
+                        shape:
+                            isCircle ? BoxShape.circle : BoxShape.rectangle,
+                        borderRadius:
+                            isCircle ? null : BorderRadius.circular(cellRadius),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Text('More',
+                    style:
+                        TextStyle(fontSize: labelFontSize, color: colors.textFaint)),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../theme/app_colors.dart';
+import '../utils/money.dart';
 
 class TransactionCard extends StatelessWidget {
   final MpesaTransaction transaction;
@@ -13,7 +14,6 @@ class TransactionCard extends StatelessWidget {
     this.onDelete,
   });
 
-  static final _amountFmt = NumberFormat('#,##0.00');
   static final _timeFmt = DateFormat('h:mm a');
 
   @override
@@ -108,7 +108,7 @@ class TransactionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${isCredit ? '+' : '-'} Ksh ${_amountFmt.format(transaction.amount)}',
+                  '${isCredit ? '+' : '-'} ${Money.exact(transaction.amount)}',
                   style: TextStyle(
                     color: amountColor,
                     fontWeight: FontWeight.bold,

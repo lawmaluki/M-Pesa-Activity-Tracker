@@ -45,19 +45,6 @@ class DatabaseService {
     );
   }
 
-  Future<int> insertTransaction(MpesaTransaction tx) async {
-    final database = await db;
-    try {
-      return await database.insert(
-        'transactions',
-        tx.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
-    } catch (_) {
-      return 0;
-    }
-  }
-
   Future<int> insertTransactionsBatch(List<MpesaTransaction> txs) async {
     final database = await db;
     int inserted = 0;
@@ -83,19 +70,6 @@ class DatabaseService {
     return maps.map(MpesaTransaction.fromMap).toList();
   }
 
-  Future<List<MpesaTransaction>> fetchByDate(DateTime date) async {
-    final database = await db;
-    final start = DateTime(date.year, date.month, date.day);
-    final end = start.add(const Duration(days: 1));
-    final maps = await database.query(
-      'transactions',
-      where: 'date >= ? AND date < ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String()],
-      orderBy: 'date ASC',
-    );
-    return maps.map(MpesaTransaction.fromMap).toList();
-  }
-
   Future<Map<String, int>> fetchDailyCountsForYear(int year) async {
     final database = await db;
     final start = DateTime(year);
@@ -112,37 +86,6 @@ class DatabaseService {
     return {for (final row in result) row['day'] as String: row['cnt'] as int};
   }
 
-  Future<Map<String, double>> fetchDailyAmountsForYear(int year) async {
-    final database = await db;
-    final start = DateTime(year);
-    final end = DateTime(year + 1);
-    final result = await database.rawQuery(
-      '''
-      SELECT substr(date, 1, 10) as day, SUM(amount) as total
-      FROM transactions
-      WHERE date >= ? AND date < ?
-      GROUP BY day
-      ''',
-      [start.toIso8601String(), end.toIso8601String()],
-    );
-    return {
-      for (final row in result)
-        row['day'] as String: (row['total'] as num).toDouble()
-    };
-  }
-
-  Future<bool> refExists(String ref) async {
-    final database = await db;
-    final result = await database.query(
-      'transactions',
-      columns: ['id'],
-      where: 'ref = ?',
-      whereArgs: [ref],
-      limit: 1,
-    );
-    return result.isNotEmpty;
-  }
-
   Future<void> deleteTransaction(int id) async {
     final database = await db;
     await database.delete('transactions', where: 'id = ?', whereArgs: [id]);
@@ -151,18 +94,5 @@ class DatabaseService {
   Future<void> deleteAll() async {
     final database = await db;
     await database.delete('transactions');
-  }
-
-  Future<Map<String, dynamic>> fetchStats() async {
-    final database = await db;
-    final result = await database.rawQuery('''
-      SELECT
-        COUNT(*) as total_count,
-        SUM(amount) as total_amount,
-        MIN(date) as first_date,
-        MAX(date) as last_date
-      FROM transactions
-    ''');
-    return result.first;
   }
 }

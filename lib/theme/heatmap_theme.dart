@@ -4,125 +4,135 @@ import 'package:flutter/material.dart';
 /// activity) always comes from [AppColors.heatmapLevels] so it stays a
 /// neutral tone matching the app's surface — only levels 1–4 (increasing
 /// activity) vary by theme.
+///
+/// Each member is one swatch in the picker grid (a fixed hue/saturation,
+/// like a color-picker dot) rather than a hand-tuned 4-color ramp — the
+/// 4 activity-intensity shades are generated on the fly as a lightness
+/// gradient from that swatch (see [ramp]), so the picker can offer a full
+/// palette without hand-authoring a ramp per color.
 enum HeatmapColorTheme {
+  red,
+  orange,
+  yellow,
+  lime,
   green,
+  mint,
+  teal,
   blue,
+  indigo,
   purple,
-  amber,
-  maroon,
-  babyPink;
+  violet,
+  magenta,
+  pink,
+  rose,
+  slate,
+  gray,
+  steel,
+  charcoal;
 
   String get label {
     switch (this) {
+      case HeatmapColorTheme.red:
+        return 'Red';
+      case HeatmapColorTheme.orange:
+        return 'Orange';
+      case HeatmapColorTheme.yellow:
+        return 'Yellow';
+      case HeatmapColorTheme.lime:
+        return 'Lime';
       case HeatmapColorTheme.green:
         return 'Green';
+      case HeatmapColorTheme.mint:
+        return 'Mint';
+      case HeatmapColorTheme.teal:
+        return 'Teal';
       case HeatmapColorTheme.blue:
         return 'Blue';
+      case HeatmapColorTheme.indigo:
+        return 'Indigo';
       case HeatmapColorTheme.purple:
         return 'Purple';
-      case HeatmapColorTheme.amber:
-        return 'Amber';
-      case HeatmapColorTheme.maroon:
-        return 'Maroon';
-      case HeatmapColorTheme.babyPink:
-        return 'Baby Pink';
+      case HeatmapColorTheme.violet:
+        return 'Violet';
+      case HeatmapColorTheme.magenta:
+        return 'Magenta';
+      case HeatmapColorTheme.pink:
+        return 'Pink';
+      case HeatmapColorTheme.rose:
+        return 'Rose';
+      case HeatmapColorTheme.slate:
+        return 'Slate';
+      case HeatmapColorTheme.gray:
+        return 'Gray';
+      case HeatmapColorTheme.steel:
+        return 'Steel';
+      case HeatmapColorTheme.charcoal:
+        return 'Charcoal';
     }
   }
 
-  /// Four colors, level 1 (lightest activity) through level 4 (heaviest),
-  /// tuned separately for dark and light app themes.
-  List<Color> ramp(Brightness brightness) {
-    final isDark = brightness == Brightness.dark;
+  /// The raw picker dot color — shown as-is in the customize sheet
+  /// regardless of the app's light/dark theme, so the picker always
+  /// matches the palette the user is choosing from.
+  Color get base {
     switch (this) {
+      case HeatmapColorTheme.red:
+        return const Color(0xFFFF6B6B);
+      case HeatmapColorTheme.orange:
+        return const Color(0xFFFFA94D);
+      case HeatmapColorTheme.yellow:
+        return const Color(0xFFFFD43B);
+      case HeatmapColorTheme.lime:
+        return const Color(0xFFB2E35B);
       case HeatmapColorTheme.green:
-        return isDark
-            ? const [
-                Color(0xFF0A3D1F),
-                Color(0xFF1A6B38),
-                Color(0xFF25A244),
-                Color(0xFF4CD964),
-              ]
-            : const [
-                Color(0xFFBFE6CB),
-                Color(0xFF7FCB98),
-                Color(0xFF34AE5C),
-                Color(0xFF1B8A3A),
-              ];
+        return const Color(0xFF69DB7C);
+      case HeatmapColorTheme.mint:
+        return const Color(0xFF4ECDC4);
+      case HeatmapColorTheme.teal:
+        return const Color(0xFF3BC9DB);
       case HeatmapColorTheme.blue:
-        return isDark
-            ? const [
-                Color(0xFF0A2C4D),
-                Color(0xFF15477A),
-                Color(0xFF2166B0),
-                Color(0xFF4C9CE0),
-              ]
-            : const [
-                Color(0xFFCFE3F7),
-                Color(0xFF8FC0EC),
-                Color(0xFF3E86D0),
-                Color(0xFF1A5A9E),
-              ];
+        return const Color(0xFF4DA3E0);
+      case HeatmapColorTheme.indigo:
+        return const Color(0xFF7B85E8);
       case HeatmapColorTheme.purple:
-        return isDark
-            ? const [
-                Color(0xFF2A0A4D),
-                Color(0xFF47157A),
-                Color(0xFF6621B0),
-                Color(0xFF9C4CE0),
-              ]
-            : const [
-                Color(0xFFE3CFF7),
-                Color(0xFFC08FEC),
-                Color(0xFF863ED0),
-                Color(0xFF5A1A9E),
-              ];
-      case HeatmapColorTheme.amber:
-        return isDark
-            ? const [
-                Color(0xFF4D3A0A),
-                Color(0xFF7A5C15),
-                Color(0xFFB08321),
-                Color(0xFFE0B44C),
-              ]
-            : const [
-                Color(0xFFF7EACF),
-                Color(0xFFECCE8F),
-                Color(0xFFD0983E),
-                Color(0xFF9E6E1A),
-              ];
-      case HeatmapColorTheme.maroon:
-        return isDark
-            ? const [
-                Color(0xFF4D0A16),
-                Color(0xFF7A1526),
-                Color(0xFFB0212F),
-                Color(0xFFE04C56),
-              ]
-            : const [
-                Color(0xFFF7CFD3),
-                Color(0xFFECA0A8),
-                Color(0xFFD04C58),
-                Color(0xFF9E1A26),
-              ];
-      case HeatmapColorTheme.babyPink:
-        return isDark
-            ? const [
-                Color(0xFF4D1A2E),
-                Color(0xFF7A2F47),
-                Color(0xFFB0466B),
-                Color(0xFFE080A0),
-              ]
-            : const [
-                Color(0xFFF7DCE8),
-                Color(0xFFECAECD),
-                Color(0xFFD06B9E),
-                Color(0xFF9E3A6E),
-              ];
+        return const Color(0xFF9B6BDE);
+      case HeatmapColorTheme.violet:
+        return const Color(0xFFB57BE0);
+      case HeatmapColorTheme.magenta:
+        return const Color(0xFFDB6FC7);
+      case HeatmapColorTheme.pink:
+        return const Color(0xFFF2789F);
+      case HeatmapColorTheme.rose:
+        return const Color(0xFFE0555F);
+      case HeatmapColorTheme.slate:
+        return const Color(0xFFC4C9CF);
+      case HeatmapColorTheme.gray:
+        return const Color(0xFFADB3BA);
+      case HeatmapColorTheme.steel:
+        return const Color(0xFF8A9099);
+      case HeatmapColorTheme.charcoal:
+        return const Color(0xFF6B7280);
     }
   }
 
-  /// A single representative color for pickers/swatches.
-  Color swatch(Brightness brightness) => ramp(brightness)[3];
+  /// Four colors, level 1 (lightest activity) through level 4 (heaviest) —
+  /// a lightness gradient built from this swatch's own hue/saturation
+  /// (fixed lightness stops per app brightness) rather than a hand-picked
+  /// ramp, so every swatch in the picker gets a consistent, usable ramp.
+  List<Color> ramp(Brightness brightness) {
+    final hsl = HSLColor.fromColor(base);
+    const darkStops = [0.16, 0.30, 0.45, 0.62];
+    const lightStops = [0.88, 0.74, 0.58, 0.42];
+    final stops = brightness == Brightness.dark ? darkStops : lightStops;
+    return stops
+        .map((l) => HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation, l).toColor())
+        .toList();
+  }
+
+  /// A single representative color for pickers/swatches — the raw base
+  /// color, unaffected by [brightness] (kept as a parameter so call sites
+  /// don't need to change) since the picker itself isn't theme-dependent.
+  Color swatch(Brightness brightness) => base;
 }
 
 enum HeatmapCellSize {

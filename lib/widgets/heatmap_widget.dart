@@ -178,6 +178,11 @@ class _DayCell extends StatelessWidget {
     required this.onTap,
   });
 
+  // Built once for the whole grid rather than per cell — a year's heatmap
+  // is 365+ cells, each of which would otherwise construct this twice on
+  // every rebuild.
+  static final _tooltipDateFmt = DateFormat('MMM d, yyyy');
+
   int get _intensity {
     if (count == 0) return 0;
     if (count <= 2) return 1;
@@ -204,8 +209,8 @@ class _DayCell extends StatelessWidget {
         padding: EdgeInsets.only(bottom: gap),
         child: Tooltip(
           message: isFuture
-              ? DateFormat('MMM d, yyyy').format(day!)
-              : '${DateFormat('MMM d, yyyy').format(day!)}: $count transaction${count == 1 ? '' : 's'}',
+              ? _tooltipDateFmt.format(day!)
+              : '${_tooltipDateFmt.format(day!)}: $count transaction${count == 1 ? '' : 's'}',
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             width: cellSize,
