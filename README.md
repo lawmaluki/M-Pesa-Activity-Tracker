@@ -15,19 +15,19 @@ Instead of manually checking statements, the system:
 # Why this?
 
 ```
- Turns messy SMS data into behavioral insight
- Makes spending patterns visually obvious
- Helps with budgeting without traditional finance apps
- Feels like “GitHub for your money activity”
+Turns messy SMS data into behavioral insight
+Makes spending patterns visually obvious
+Helps with budgeting without traditional finance apps
+Feels like “GitHub for your money activity”
 ```
 # Potential extensions
 
 If developed further, it can evolve into:
 
 ```
- Monthly financial “activity score”
- Full personal finance dashboard
- Mobile app version with real-time tracking
+Monthly financial “activity score”
+Full personal finance dashboard
+Mobile app version with real-time tracking
 ```
 It’s a personal financial contribution graph but instead of code commits, it visualizes your
 money activity from M-Pesa as daily behavioral patterns.
