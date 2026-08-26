@@ -34,9 +34,9 @@ date: "2026"
 
 ## 1. Overview
 
-The M-Pesa Activity Tracker is a Flutter Android application that automatically parses M-Pesa SMS notifications, extracts structured transaction data, and visualises daily financial activity as a **GitHub-style contribution heatmap**.
+The M-Pesa Activity Tracker is a Flutter Android application that parses M-Pesa transaction data — from pasted SMS text, CSV statements, or PDF statements — and visualises daily financial activity as a **GitHub-style contribution heatmap**.
 
-Instead of scrolling through hundreds of SMS notifications or exporting statements manually, the app turns your raw M-Pesa history into a visual behavioural pattern — making spending habits and money movement immediately obvious at a glance.
+The app turns your raw M-Pesa history into a visual behavioural pattern — making spending habits and money movement immediately obvious at a glance. It does not read your device's SMS inbox; all data is supplied manually, so no SMS permissions are required.
 
 > *"It's a personal financial contribution graph — but instead of code commits, it visualises your money activity from M-Pesa as daily behavioural patterns."*
 
@@ -48,7 +48,6 @@ Instead of scrolling through hundreds of SMS notifications or exporting statemen
 
 | Method | Description |
 |---|---|
-| **SMS Sync** | Reads M-Pesa messages directly from the device inbox with one tap |
 | **Paste SMS** | Copy-paste one or many M-Pesa notifications into a text box |
 | **CSV Import** | Import the official statement export from the M-Pesa app |
 | **PDF Import** | Import the password-protected PDF statement export, decrypted on-device |
@@ -110,7 +109,7 @@ The app uses a clean layered architecture:
                              │  calls
 ┌────────────────────────────▼────────────────────────────────┐
 │                       Service Layer                           │
-│  SmsService │ SmsParser │ StatementParser │ PdfStatementParser│
+│      SmsParser │ StatementParser │ PdfStatementParser         │
 │                      DatabaseService                           │
 └────────────────────────────┬────────────────────────────────┘
                              │  persists to
@@ -137,7 +136,6 @@ lib/
 ├── services/
 │   ├── database_service.dart        # SQLite singleton, CRUD, aggregation queries
 │   ├── sms_parser.dart              # Regex parser for M-Pesa SMS format
-│   ├── sms_service.dart             # Reads device inbox, permissions
 │   ├── statement_parser.dart        # CSV + pasted-SMS bulk import
 │   └── pdf_statement_parser.dart    # Password-protected PDF statement import
 ├── providers/
@@ -166,7 +164,7 @@ lib/
 
 android/
 └── app/src/main/
-    └── AndroidManifest.xml          # SMS, storage, and legacy-storage permissions
+    └── AndroidManifest.xml          # Storage and legacy-storage permissions
 
 test/
 └── widget_test.dart
@@ -176,16 +174,10 @@ test/
 
 ## 5. Data Flow
 
-### SMS Sync Flow
+### Paste SMS Flow
 
 ```
-User taps Sync
-     │
-     ▼
-SmsService.requestPermissions()
-     │
-     ▼  (granted)
-flutter_sms_inbox reads device inbox
+User pastes one or many M-Pesa SMS messages into the text box
      │
      ▼
 Filter: SmsParser.isMpesaSms(body)
@@ -279,7 +271,7 @@ The single source of truth for transaction and heatmap-count state.
 | `selectedDay` | `DateTime?` | Day tapped on heatmap |
 | `state` | `LoadState` | `idle / loading / error` |
 
-Key actions: `loadData()`, `syncSms()`, `importCsv()`, `importPastedSms()`, `importPdf()`, `deleteTransaction()`, `clearAll()`, `setSelectedYear()`, `selectDay()`, `onNewTransaction()`
+Key actions: `loadData()`, `importCsv()`, `importPastedSms()`, `importPdf()`, `deleteTransaction()`, `clearAll()`, `setSelectedYear()`, `selectDay()`
 
 ### 6.2 ThemeProvider (`providers/theme_provider.dart`) & HeatmapSettingsProvider (`providers/heatmap_settings_provider.dart`)
 
@@ -583,15 +575,13 @@ The app requests the following Android permissions at runtime:
 
 | Permission | Purpose | When requested |
 |---|---|---|
-| `READ_SMS` | Read M-Pesa messages from device inbox | On "Sync SMS" tap |
-| `RECEIVE_SMS` | Declared for future real-time listening | On "Sync SMS" tap |
 | `READ_EXTERNAL_STORAGE` | File import (Android ≤12) | On "Choose File" tap |
 | `READ_MEDIA_*` | File import (Android 13+) | On "Choose File" tap |
 | `WRITE_EXTERNAL_STORAGE` (`maxSdkVersion=29`) | Saving the share card to the gallery on Android ≤9 | On "Save to gallery" tap |
 
 The manifest also sets `android:requestLegacyExternalStorage="true"`, which `gal` needs to write to the gallery on Android ≤9. Both this flag and `WRITE_EXTERNAL_STORAGE` are no-ops on Android 10+ (API 30+), which use scoped storage instead.
 
-> **Import via Paste, CSV, or PDF** works completely **without any permissions** — the user manually supplies the data.
+> The app requests **no SMS permissions** — every import method (Paste, CSV, PDF) works with the user manually supplying the data, which also avoids Play Protect flagging the app as suspicious for requesting `READ_SMS`/`RECEIVE_SMS`.
 
 ---
 
@@ -603,8 +593,6 @@ The manifest also sets `android:requestLegacyExternalStorage="true"`, which `gal
 | `sqflite` | ^2.3.3+1 | Local SQLite database |
 | `path` | ^1.9.0 | File path utilities |
 | `file_picker` | ^8.1.2 | Pick CSV/TXT/PDF files |
-| `permission_handler` | ^11.3.1 | Runtime permissions |
-| `flutter_sms_inbox` | ^1.0.3 | Read device SMS inbox |
 | `csv` | ^6.0.0 | Parse CSV statement exports |
 | `pdfrx` | ^1.3.5 | Open + decrypt password-protected PDF statements, extract text |
 | `intl` | ^0.19.0 | Date & number formatting |
@@ -643,8 +631,7 @@ flutter build apk --release
 ### First Use
 
 1. **Launch the app** — the heatmap starts empty
-2. **Import data** using any of four methods:
-   - Tap **Sync SMS** (top-right ⟳) → grant SMS permission → syncs all M-Pesa inbox messages automatically
+2. **Import data** using any of three methods:
    - Tap **Import FAB** → **PDF Statement** tab → choose your statement export → enter its password
    - Tap **Import FAB** → **Paste SMS** tab → paste copied M-Pesa messages → tap Import
    - Tap **Import FAB** → **CSV File** tab → choose your Safaricom statement export
@@ -659,7 +646,6 @@ flutter build apk --release
 
 | Feature | Description |
 |---|---|
-| **Real-time SMS listener** | Native Android `BroadcastReceiver` via platform channel — auto-adds new M-Pesa messages as they arrive |
 | **Monthly activity score** | Roll up spending/receiving into a single behavioural score per month |
 | **Category breakdown** | Pie/bar chart of spend by type (Paybill, Buy Goods, Airtime, etc.) |
 | **Budget alerts** | Set daily/weekly spending limits with notifications |

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
 import '../services/pdf_statement_parser.dart';
-import '../services/sms_service.dart';
 import '../services/statement_parser.dart';
 
 enum LoadState { idle, loading, error }
@@ -117,27 +116,6 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  Future<SyncResult> syncSms() async {
-    _setState(LoadState.loading);
-    try {
-      final result = await SmsService.syncFromDevice();
-      if (result.newCount > 0) {
-        _transactions = await DatabaseService.instance.fetchAll();
-        await _refreshHeatmapData();
-      }
-      _setState(LoadState.idle);
-      return result;
-    } catch (e) {
-      _setError('SMS sync failed: $e');
-      return SyncResult(
-        success: false,
-        message: 'Error: $e',
-        newCount: 0,
-        totalParsed: 0,
-      );
-    }
-  }
-
   Future<ImportResult> importCsv(String csvContent) async {
     _setState(LoadState.loading);
     try {
@@ -244,13 +222,6 @@ class TransactionProvider extends ChangeNotifier {
 
   void selectDay(DateTime? day) {
     _selectedDay = day;
-    notifyListeners();
-  }
-
-  void onNewTransaction(MpesaTransaction tx) {
-    _transactions.insert(0, tx);
-    final key = tx.dateKey;
-    _dailyCounts[key] = (_dailyCounts[key] ?? 0) + 1;
     notifyListeners();
   }
 

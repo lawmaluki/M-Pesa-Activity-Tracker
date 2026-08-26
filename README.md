@@ -6,7 +6,7 @@ Helping you understand your spending and money movement patterns over time.
 
 Instead of manually checking statements, the system:
 
-1. Listens to or imports M-Pesa SMS messages
+1. Imports M-Pesa SMS messages (paste, CSV, or PDF statement)
 2. Extracts structured data (date, amount, transaction type)
 3. Aggregates activity per day
 4. Maps intensity of transactions into a heatmap - github style

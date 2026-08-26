@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/transaction_provider.dart';
-import '../services/sms_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/heatmap_widget.dart';
 import '../widgets/more_menu_sheet.dart';
@@ -24,45 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TransactionProvider>().loadData();
-      _startSmsListener();
     });
-  }
-
-  void _startSmsListener() async {
-    final granted = await SmsService.hasPermission();
-    if (!granted || !mounted) return;
-    SmsService.startListening((tx) {
-      if (!mounted) return;
-      context.read<TransactionProvider>().onNewTransaction(tx);
-    });
-  }
-
-  Future<void> _syncSms() async {
-    final provider = context.read<TransactionProvider>();
-    final granted = await SmsService.requestPermissions();
-    if (!mounted) return;
-
-    if (!granted) {
-      _showSnack('SMS permission denied. Grant it in Settings to auto-sync.');
-      return;
-    }
-
-    final result = await provider.syncSms();
-    if (!mounted) return;
-
-    _showSnack(result.message);
-  }
-
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: context.colors.border, width: 1),
-        ),
-      ),
-    );
   }
 
   @override
@@ -177,13 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       actions: [
-        _CircleIconButton(
-          icon: Icons.sync_outlined,
-          iconColor: colors.accentGreen,
-          tooltip: 'Sync SMS',
-          onPressed: provider.state == LoadState.loading ? null : _syncSms,
-        ),
-        const SizedBox(width: 8),
         _CircleIconButton(
           icon: Icons.share_outlined,
           tooltip: 'Share',

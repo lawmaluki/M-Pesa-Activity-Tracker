@@ -20,12 +20,6 @@ dependencies:
   # File picking for statement imports
   file_picker: ^8.1.2
 
-  # Permissions
-  permission_handler: ^11.3.1
-
-  # SMS reading (Android)
-  flutter_sms_inbox: ^1.0.3
-
   # CSV parsing for statement imports
   csv: ^6.0.0
 
