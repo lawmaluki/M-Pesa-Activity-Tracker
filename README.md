@@ -1,5 +1,7 @@
 GitHub for your money activity
 
+<img width="1920" height="1440" alt="365shots_so" src="https://github.com/user-attachments/assets/57405823-9add-4925-8127-2cbad9f47ad6" />
+
 A system that automatically parses M-Pesa SMS notifications, extracts transaction details, and
 visualizes daily activity as a GitHub-style heatmap.
 Helping you understand your spending and money movement patterns over time.
